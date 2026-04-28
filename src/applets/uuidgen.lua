@@ -20,24 +20,39 @@ end
 
 local function v4()
   local bytes = {}
-  for i = 1, 16 do bytes[i] = rand_byte() end
+  for i = 1, 16 do
+    bytes[i] = rand_byte()
+  end
   -- Set version (4) and variant (10xx)
   bytes[7] = (bytes[7] - (bytes[7] - (bytes[7] % 16))) + 64
   bytes[7] = (bytes[7] % 16) + 64
   bytes[9] = (bytes[9] % 64) + 128
   return string.format(
     "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-    bytes[1], bytes[2], bytes[3], bytes[4],
-    bytes[5], bytes[6],
-    bytes[7], bytes[8],
-    bytes[9], bytes[10],
-    bytes[11], bytes[12], bytes[13], bytes[14], bytes[15], bytes[16]
+    bytes[1],
+    bytes[2],
+    bytes[3],
+    bytes[4],
+    bytes[5],
+    bytes[6],
+    bytes[7],
+    bytes[8],
+    bytes[9],
+    bytes[10],
+    bytes[11],
+    bytes[12],
+    bytes[13],
+    bytes[14],
+    bytes[15],
+    bytes[16]
   )
 end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local upper = false
   local no_dashes = false
@@ -48,12 +63,15 @@ local function main(argv)
     local a = args[i]
     if a == "-r" or a == "--random" then
       i = i + 1 -- only mode supported
-    elseif a == "-t" or a == "--time" or a == "-m" or a == "--md5"
-           or a == "-s" or a == "--sha1" then
+    elseif a == "-t" or a == "--time" or a == "-m" or a == "--md5" or a == "-s" or a == "--sha1" then
       common.err(NAME, "only random (v4) UUIDs are supported in this build")
       return 2
-    elseif a == "--upper" then upper = true; i = i + 1
-    elseif a == "--hex" then no_dashes = true; i = i + 1
+    elseif a == "--upper" then
+      upper = true
+      i = i + 1
+    elseif a == "--hex" then
+      no_dashes = true
+      i = i + 1
     elseif (a == "-c" or a == "--count") and i + 1 <= #args then
       local n = common.parse_int(args[i + 1])
       if not n or n < 1 then

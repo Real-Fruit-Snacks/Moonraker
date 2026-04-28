@@ -10,24 +10,18 @@ end
 
 local function path_join(a, b)
   local sep = common.path_sep()
-  if a:sub(-1) == "/" or a:sub(-1) == "\\" then
-    return a .. b
-  end
+  if a:sub(-1) == "/" or a:sub(-1) == "\\" then return a .. b end
   return a .. sep .. b
 end
 
 local function is_directory(lfs, path)
-  if not lfs then
-    return false
-  end
+  if not lfs then return false end
   local attr = lfs.attributes(path)
   return attr ~= nil and attr.mode == "directory"
 end
 
 local function exists(lfs, path)
-  if lfs then
-    return lfs.symlinkattributes(path) ~= nil
-  end
+  if lfs then return lfs.symlinkattributes(path) ~= nil end
   local f = io.open(path, "rb")
   if f then
     f:close()
@@ -40,14 +34,10 @@ end
 --- copy+remove if rename fails (different filesystems).
 local function move_one(src, dst)
   local ok, err = os.rename(src, dst)
-  if ok then
-    return true
-  end
+  if ok then return true end
   -- Fallback: copy then unlink. Only handles regular files.
   local in_fh = io.open(src, "rb")
-  if not in_fh then
-    return false, err
-  end
+  if not in_fh then return false, err end
   local out_fh = io.open(dst, "wb")
   if not out_fh then
     in_fh:close()
@@ -55,9 +45,7 @@ local function move_one(src, dst)
   end
   while true do
     local chunk = in_fh:read(64 * 1024)
-    if not chunk or chunk == "" then
-      break
-    end
+    if not chunk or chunk == "" then break end
     out_fh:write(chunk)
   end
   in_fh:close()
@@ -84,9 +72,7 @@ local function main(argv)
       table.remove(args, i)
       break
     end
-    if a:sub(1, 1) ~= "-" or #a < 2 then
-      break
-    end
+    if a:sub(1, 1) ~= "-" or #a < 2 then break end
     for ch in a:sub(2):gmatch(".") do
       if ch == "f" then
         force = true

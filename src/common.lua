@@ -16,18 +16,14 @@ end
 --- Returns the file handle on success, or (nil, errmsg) on failure.
 function M.open_input(path, mode)
   mode = mode or "rb"
-  if path == "-" then
-    return io.stdin
-  end
+  if path == "-" then return io.stdin end
   return io.open(path, mode)
 end
 
 --- Open a file path for writing, or return io.stdout for "-".
 function M.open_output(path, mode)
   mode = mode or "wb"
-  if path == "-" then
-    return io.stdout
-  end
+  if path == "-" then return io.stdout end
   return io.open(path, mode)
 end
 
@@ -49,24 +45,16 @@ end
 --- Extract the dirname of a path. Returns "." for bare names.
 function M.dirname(path)
   local dir = path:match("^(.*)[/\\][^/\\]+$")
-  if dir == nil or dir == "" then
-    return "."
-  end
+  if dir == nil or dir == "" then return "." end
   return dir
 end
 
 --- Join two path components with the platform separator.
 function M.path_join(a, b)
-  if a == "" or a == "." then
-    return b
-  end
-  if b == "" then
-    return a
-  end
+  if a == "" or a == "." then return b end
+  if b == "" then return a end
   local last = a:sub(-1)
-  if last == "/" or last == "\\" then
-    return a .. b
-  end
+  if last == "/" or last == "\\" then return a .. b end
   return a .. M.path_sep() .. b
 end
 
@@ -77,17 +65,11 @@ end
 function M.walk(root, callback, opts)
   opts = opts or {}
   local lfs = M.try_lfs()
-  if not lfs then
-    return false, "luafilesystem not available"
-  end
+  if not lfs then return false, "luafilesystem not available" end
   local function visit(path)
     local attr = lfs.symlinkattributes(path)
-    if not attr then
-      return
-    end
-    if not opts.bottom_up then
-      callback(path, attr)
-    end
+    if not attr then return end
+    if not opts.bottom_up then callback(path, attr) end
     if attr.mode == "directory" and not opts.no_recurse then
       local entries = {}
       -- lfs.dir errors if the path can't be read (perm denied etc.). Wrap
@@ -95,9 +77,7 @@ function M.walk(root, callback, opts)
       -- of aborting the whole walk.
       local list_ok = pcall(function()
         for entry in lfs.dir(path) do
-          if entry ~= "." and entry ~= ".." then
-            entries[#entries + 1] = entry
-          end
+          if entry ~= "." and entry ~= ".." then entries[#entries + 1] = entry end
         end
       end)
       if list_ok then
@@ -107,9 +87,7 @@ function M.walk(root, callback, opts)
         end
       end
     end
-    if opts.bottom_up then
-      callback(path, attr)
-    end
+    if opts.bottom_up then callback(path, attr) end
   end
   visit(root)
   return true
@@ -151,21 +129,15 @@ end
 --- Strict integer parser. Returns the integer or nil if `s` is not a valid
 --- integer (rejects floats, hex, leading whitespace).
 function M.parse_int(s)
-  if type(s) ~= "string" or s == "" then
-    return nil
-  end
-  if not s:match("^%-?%d+$") then
-    return nil
-  end
+  if type(s) ~= "string" or s == "" then return nil end
+  if not s:match("^%-?%d+$") then return nil end
   return tonumber(s)
 end
 
 --- Lazily try to load LuaFileSystem. Returns the module or nil.
 function M.try_lfs()
   local ok, lfs = pcall(require, "lfs")
-  if ok and type(lfs) == "table" then
-    return lfs
-  end
+  if ok and type(lfs) == "table" then return lfs end
   return nil
 end
 
@@ -192,9 +164,7 @@ function M.iter_lines_keep_nl(fh)
         return line
       end
       if eof then
-        if buf == "" then
-          return nil
-        end
+        if buf == "" then return nil end
         local line = buf
         buf = ""
         return line
@@ -216,25 +186,17 @@ function M.should_overwrite(applet, target, src, opts)
   opts = opts or {}
   local lfs = M.try_lfs()
   local target_attr = lfs and lfs.symlinkattributes(target) or nil
-  if target_attr == nil then
-    return true
-  end
-  if opts.no_clobber then
-    return false
-  end
+  if target_attr == nil then return true end
+  if opts.no_clobber then return false end
   if opts.update and lfs then
     local src_attr = lfs.attributes(src)
-    if src_attr and src_attr.modification <= target_attr.modification then
-      return false
-    end
+    if src_attr and src_attr.modification <= target_attr.modification then return false end
   end
   if opts.interactive and not opts.force then
     io.stderr:write(string.format("%s: overwrite '%s'? ", applet, target))
     io.stderr:flush()
     local ans = io.stdin:read("*l")
-    if not ans or not ans:lower():match("^y") then
-      return false
-    end
+    if not ans or not ans:lower():match("^y") then return false end
   end
   return true
 end

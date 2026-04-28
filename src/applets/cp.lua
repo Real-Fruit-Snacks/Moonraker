@@ -69,20 +69,30 @@ local function main(argv)
       table.remove(args, i)
       break
     end
-    if a:sub(1, 1) ~= "-" or #a < 2 then
-      break
-    end
+    if a:sub(1, 1) ~= "-" or #a < 2 then break end
     for ch in a:sub(2):gmatch(".") do
-      if ch == "r" or ch == "R" then recursive = true
-      elseif ch == "f" then force = true; interactive = false; no_clobber = false
-      elseif ch == "v" then verbose = true
+      if ch == "r" or ch == "R" then
+        recursive = true
+      elseif ch == "f" then
+        force = true
+        interactive = false
+        no_clobber = false
+      elseif ch == "v" then
+        verbose = true
       elseif ch == "p" then
         -- preserve metadata; lfs doesn't expose chmod, treat as no-op
         recursive = recursive
-      elseif ch == "a" then recursive = true
-      elseif ch == "i" then interactive = true; no_clobber = false; force = false
-      elseif ch == "n" then no_clobber = true; interactive = false
-      elseif ch == "u" then update = true
+      elseif ch == "a" then
+        recursive = true
+      elseif ch == "i" then
+        interactive = true
+        no_clobber = false
+        force = false
+      elseif ch == "n" then
+        no_clobber = true
+        interactive = false
+      elseif ch == "u" then
+        update = true
       else
         common.err(NAME, "invalid option: -" .. ch)
         return 2

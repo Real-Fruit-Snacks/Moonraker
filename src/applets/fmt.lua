@@ -34,9 +34,7 @@ local function reflow(paragraph, width)
       cur_len = new_len
     end
   end
-  if #cur > 0 then
-    out[#out + 1] = table.concat(cur, " ")
-  end
+  if #cur > 0 then out[#out + 1] = table.concat(cur, " ") end
   return out
 end
 
@@ -54,9 +52,7 @@ local function split_long(line, width)
       cur = w
     end
   end
-  if cur ~= "" then
-    out[#out + 1] = cur
-  end
+  if cur ~= "" then out[#out + 1] = cur end
   return out
 end
 
@@ -67,9 +63,7 @@ local function read_lines(fh)
     lines[#lines + 1] = line
   end
   -- Trim a trailing empty entry that gmatch produces if input ends with \n.
-  if lines[#lines] == "" then
-    lines[#lines] = nil
-  end
+  if lines[#lines] == "" then lines[#lines] = nil end
   return lines
 end
 
@@ -124,9 +118,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   local rc = 0
   local out_lines = {}
@@ -167,9 +159,7 @@ local function main(argv)
     end
   end
 
-  if #out_lines > 0 then
-    io.stdout:write(table.concat(out_lines, "\n"), "\n")
-  end
+  if #out_lines > 0 then io.stdout:write(table.concat(out_lines, "\n"), "\n") end
   io.stdout:flush()
   return rc
 end

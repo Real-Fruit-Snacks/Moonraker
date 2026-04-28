@@ -5,25 +5,36 @@ local common = require("common")
 local NAME = "od"
 
 local ESCAPES = {
-  [0] = "\\0", [7] = "\\a", [8] = "\\b", [9] = "\\t",
-  [10] = "\\n", [11] = "\\v", [12] = "\\f", [13] = "\\r",
+  [0] = "\\0",
+  [7] = "\\a",
+  [8] = "\\b",
+  [9] = "\\t",
+  [10] = "\\n",
+  [11] = "\\v",
+  [12] = "\\f",
+  [13] = "\\r",
 }
 
-local function fmt_oct(b) return string.format("%03o", b) end
-local function fmt_hex(b) return string.format("%02x", b) end
-local function fmt_dec(b) return string.format("%3d", b) end
+local function fmt_oct(b)
+  return string.format("%03o", b)
+end
+local function fmt_hex(b)
+  return string.format("%02x", b)
+end
+local function fmt_dec(b)
+  return string.format("%3d", b)
+end
 local function fmt_chr(b)
-  if ESCAPES[b] then
-    return string.format("%3s", ESCAPES[b])
-  end
-  if b >= 0x20 and b < 0x7F then
-    return "  " .. string.char(b)
-  end
+  if ESCAPES[b] then return string.format("%3s", ESCAPES[b]) end
+  if b >= 0x20 and b < 0x7F then return "  " .. string.char(b) end
   return string.format("%03o", b)
 end
 
 local FORMATTERS = {
-  o = fmt_oct, x = fmt_hex, d = fmt_dec, c = fmt_chr,
+  o = fmt_oct,
+  x = fmt_hex,
+  d = fmt_dec,
+  c = fmt_chr,
 }
 
 local function format_addr(radix, n)
@@ -35,7 +46,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local fmt_letter = "o"
   local width = 16
@@ -50,11 +63,21 @@ local function main(argv)
       table.remove(args, i)
       break
     end
-    if a == "-c" then fmt_letter = "c"; i = i + 1
-    elseif a == "-d" then fmt_letter = "d"; i = i + 1
-    elseif a == "-o" then fmt_letter = "o"; i = i + 1
-    elseif a == "-x" then fmt_letter = "x"; i = i + 1
-    elseif a == "-b" then fmt_letter = "o"; i = i + 1
+    if a == "-c" then
+      fmt_letter = "c"
+      i = i + 1
+    elseif a == "-d" then
+      fmt_letter = "d"
+      i = i + 1
+    elseif a == "-o" then
+      fmt_letter = "o"
+      i = i + 1
+    elseif a == "-x" then
+      fmt_letter = "x"
+      i = i + 1
+    elseif a == "-b" then
+      fmt_letter = "o"
+      i = i + 1
     elseif (a == "-A" or a == "--address-radix") and i + 1 <= #args then
       local r = args[i + 1]
       if r ~= "d" and r ~= "o" and r ~= "x" and r ~= "n" then
@@ -109,7 +132,9 @@ local function main(argv)
   end
 
   local files = {}
-  for j = i, #args do files[#files + 1] = args[j] end
+  for j = i, #args do
+    files[#files + 1] = args[j]
+  end
   if #files == 0 then files = { "-" } end
 
   local rc = 0
@@ -140,9 +165,7 @@ local function main(argv)
     local row = addr .. " " .. table.concat(cells, " ")
     lines[#lines + 1] = (row:gsub("%s+$", ""))
   end
-  if address_radix ~= "n" then
-    lines[#lines + 1] = format_addr(address_radix, skip + #data)
-  end
+  if address_radix ~= "n" then lines[#lines + 1] = format_addr(address_radix, skip + #data) end
   io.stdout:write(table.concat(lines, "\n"), "\n")
   return rc
 end

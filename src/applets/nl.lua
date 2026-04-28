@@ -78,9 +78,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   local n = start
   local rc = 0
@@ -106,9 +104,7 @@ local function main(argv)
           io.stdout:write(stripped, "\n")
         end
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()

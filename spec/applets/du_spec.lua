@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("du applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("reports usage for current dir", function()
     local rc, out = helpers.invoke_multicall("du", "-s", ".")

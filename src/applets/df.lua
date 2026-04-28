@@ -16,16 +16,12 @@ local function format_human(n)
     v = v / 1024
     i = i + 1
   end
-  if i == 1 then
-    return tostring(math.floor(v))
-  end
+  if i == 1 then return tostring(math.floor(v)) end
   return string.format("%.1f%s", v, units[i])
 end
 
 local function format_size(n, human, block_size)
-  if human then
-    return format_human(n)
-  end
+  if human then return format_human(n) end
   return tostring(math.ceil(n / block_size))
 end
 
@@ -34,9 +30,7 @@ end
 local function disk_usage_posix(path)
   local cmd = string.format('df -P -k "%s" 2>/dev/null', path:gsub('"', '\\"'))
   local pipe = io.popen(cmd)
-  if not pipe then
-    return nil
-  end
+  if not pipe then return nil end
   local lines = {}
   for line in pipe:lines() do
     lines[#lines + 1] = line
@@ -72,17 +66,18 @@ local function main(argv)
       table.remove(args, i)
       break
     end
-    if a:sub(1, 1) ~= "-" or #a < 2 or a == "-" then
-      break
-    end
+    if a:sub(1, 1) ~= "-" or #a < 2 or a == "-" then break end
     if not a:sub(2):match("^[hkm]+$") then
       common.err(NAME, "invalid option: " .. a)
       return 2
     end
     for ch in a:sub(2):gmatch(".") do
-      if ch == "h" then human = true
-      elseif ch == "k" then block_size = 1024
-      elseif ch == "m" then block_size = 1024 * 1024
+      if ch == "h" then
+        human = true
+      elseif ch == "k" then
+        block_size = 1024
+      elseif ch == "m" then
+        block_size = 1024 * 1024
       end
     end
     i = i + 1
@@ -92,14 +87,12 @@ local function main(argv)
   for j = i, #args do
     paths[#paths + 1] = args[j]
   end
-  if #paths == 0 then
-    paths = { "." }
-  end
+  if #paths == 0 then paths = { "." } end
 
-  local header_units = human and "Size"
-    or string.format("%dK-blocks", math.floor(block_size / 1024))
-  io.stdout:write(string.format("%-20s %10s %10s %10s %5s  %s\n",
-    "Filesystem", header_units, "Used", "Avail", "Use%", "Mounted on"))
+  local header_units = human and "Size" or string.format("%dK-blocks", math.floor(block_size / 1024))
+  io.stdout:write(
+    string.format("%-20s %10s %10s %10s %5s  %s\n", "Filesystem", header_units, "Used", "Avail", "Use%", "Mounted on")
+  )
 
   local rc = 0
   for _, p in ipairs(paths) do
@@ -109,12 +102,17 @@ local function main(argv)
       rc = 1
     else
       local pct = usage.total > 0 and math.floor(100 * usage.used / usage.total + 0.5) or 0
-      io.stdout:write(string.format("%-20s %10s %10s %10s %4d%%  %s\n",
-        p,
-        format_size(usage.total, human, block_size),
-        format_size(usage.used, human, block_size),
-        format_size(usage.free, human, block_size),
-        pct, p))
+      io.stdout:write(
+        string.format(
+          "%-20s %10s %10s %10s %4d%%  %s\n",
+          p,
+          format_size(usage.total, human, block_size),
+          format_size(usage.used, human, block_size),
+          format_size(usage.free, human, block_size),
+          pct,
+          p
+        )
+      )
     end
   end
   return rc

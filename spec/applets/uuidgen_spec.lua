@@ -1,14 +1,15 @@
 local helpers = require("helpers")
 
 describe("uuidgen applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("prints a UUID v4", function()
     local rc, out = helpers.invoke_multicall("uuidgen")
     assert.equal(0, rc)
     -- xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx where y is 8/9/a/b
-    local pattern = "^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89ab]"
-      .. "%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x\n$"
+    local pattern = "^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[89ab]" .. "%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x\n$"
     assert.is_truthy(out:match(pattern))
   end)
 

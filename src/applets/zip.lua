@@ -14,7 +14,7 @@ local SIG_CDR = 0x02014b50
 local SIG_EOCD = 0x06054b50
 local METHOD_STORE = 0
 local METHOD_DEFLATE = 8
-local RAW_WBITS = -zlib.MAXIMUM_WINDOWBITS  -- raw deflate (no zlib/gzip header)
+local RAW_WBITS = -zlib.MAXIMUM_WINDOWBITS -- raw deflate (no zlib/gzip header)
 
 local function u16le(n)
   return string.char(n % 256, math.floor(n / 256) % 256)
@@ -67,8 +67,8 @@ end
 
 local function write_local_header(fh, info)
   fh:write(u32le(SIG_LFH))
-  fh:write(u16le(20))                        -- version needed
-  fh:write(u16le(0))                          -- flags
+  fh:write(u16le(20)) -- version needed
+  fh:write(u16le(0)) -- flags
   fh:write(u16le(info.method))
   fh:write(u16le(info.dos_time))
   fh:write(u16le(info.dos_date))
@@ -76,15 +76,15 @@ local function write_local_header(fh, info)
   fh:write(u32le(info.csize))
   fh:write(u32le(info.usize))
   fh:write(u16le(#info.name))
-  fh:write(u16le(0))                          -- extra length
+  fh:write(u16le(0)) -- extra length
   fh:write(info.name)
 end
 
 local function write_central_entry(fh, info)
   fh:write(u32le(SIG_CDR))
-  fh:write(u16le(0x031e))                     -- version made by (3.0 unix)
-  fh:write(u16le(20))                         -- version needed
-  fh:write(u16le(0))                          -- flags
+  fh:write(u16le(0x031e)) -- version made by (3.0 unix)
+  fh:write(u16le(20)) -- version needed
+  fh:write(u16le(0)) -- flags
   fh:write(u16le(info.method))
   fh:write(u16le(info.dos_time))
   fh:write(u16le(info.dos_date))
@@ -92,24 +92,24 @@ local function write_central_entry(fh, info)
   fh:write(u32le(info.csize))
   fh:write(u32le(info.usize))
   fh:write(u16le(#info.name))
-  fh:write(u16le(0))                          -- extra length
-  fh:write(u16le(0))                          -- comment length
-  fh:write(u16le(0))                          -- disk number
-  fh:write(u16le(0))                          -- internal attrs
-  fh:write(u32le(info.is_dir and 0x41ed0010 or 0x81a40000))  -- external attrs
+  fh:write(u16le(0)) -- extra length
+  fh:write(u16le(0)) -- comment length
+  fh:write(u16le(0)) -- disk number
+  fh:write(u16le(0)) -- internal attrs
+  fh:write(u32le(info.is_dir and 0x41ed0010 or 0x81a40000)) -- external attrs
   fh:write(u32le(info.lfh_offset))
   fh:write(info.name)
 end
 
 local function write_eocd(fh, count, cd_size, cd_offset)
   fh:write(u32le(SIG_EOCD))
-  fh:write(u16le(0))                          -- this disk
-  fh:write(u16le(0))                          -- start-of-cd disk
+  fh:write(u16le(0)) -- this disk
+  fh:write(u16le(0)) -- start-of-cd disk
   fh:write(u16le(count))
   fh:write(u16le(count))
   fh:write(u32le(cd_size))
   fh:write(u32le(cd_offset))
-  fh:write(u16le(0))                          -- comment length
+  fh:write(u16le(0)) -- comment length
 end
 
 local function read_file_bytes(path)
@@ -178,9 +178,7 @@ local function walk_dir(root, callback)
       local entries = {}
       local ok = pcall(function()
         for entry in lfs.dir(p) do
-          if entry ~= "." and entry ~= ".." then
-            entries[#entries + 1] = entry
-          end
+          if entry ~= "." and entry ~= ".." then entries[#entries + 1] = entry end
         end
       end)
       if ok then
@@ -213,7 +211,10 @@ local function read_archive(path)
   -- bytes (no comment). Scan backward from the last position where
   -- a signature could fit.
   for p = #tail - 3, 1, -1 do
-    if tail:sub(p, p + 3) == "PK\5\6" then eocd_pos = p; break end
+    if tail:sub(p, p + 3) == "PK\5\6" then
+      eocd_pos = p
+      break
+    end
   end
   if not eocd_pos then
     fh:close()
@@ -221,9 +222,11 @@ local function read_archive(path)
   end
   -- EOCD layout from eocd_pos: sig(4) + disk(2) + cd-disk(2) +
   -- entries-here(2) + total(2) + cd-size(4) + cd-offset(4) + ...
-  local p = eocd_pos + 4 + 2 + 2 + 2  -- skip sig + 2 disk fields + entries-here
-  local total; total, p = read_u16le(tail, p)
-  local cd_size; cd_size, p = read_u32le(tail, p)
+  local p = eocd_pos + 4 + 2 + 2 + 2 -- skip sig + 2 disk fields + entries-here
+  local total
+  total, p = read_u16le(tail, p)
+  local cd_size
+  cd_size, p = read_u32le(tail, p)
   local cd_offset = read_u32le(tail, p)
 
   -- Read central directory
@@ -236,18 +239,28 @@ local function read_archive(path)
       fh:close()
       return nil, "bad central directory entry"
     end
-    cp = cp + 4 + 2 + 2 + 2  -- sig + version made/needed + flags
-    local method; method, cp = read_u16le(cd, cp)
-    local dos_time; dos_time, cp = read_u16le(cd, cp)
-    local dos_date; dos_date, cp = read_u16le(cd, cp)
-    local crc; crc, cp = read_u32le(cd, cp)
-    local csize; csize, cp = read_u32le(cd, cp)
-    local usize; usize, cp = read_u32le(cd, cp)
-    local nlen; nlen, cp = read_u16le(cd, cp)
-    local elen; elen, cp = read_u16le(cd, cp)
-    local clen; clen, cp = read_u16le(cd, cp)
-    cp = cp + 2 + 2 + 4  -- disk + internal attrs + external attrs
-    local lfh_offset; lfh_offset, cp = read_u32le(cd, cp)
+    cp = cp + 4 + 2 + 2 + 2 -- sig + version made/needed + flags
+    local method
+    method, cp = read_u16le(cd, cp)
+    local dos_time
+    dos_time, cp = read_u16le(cd, cp)
+    local dos_date
+    dos_date, cp = read_u16le(cd, cp)
+    local crc
+    crc, cp = read_u32le(cd, cp)
+    local csize
+    csize, cp = read_u32le(cd, cp)
+    local usize
+    usize, cp = read_u32le(cd, cp)
+    local nlen
+    nlen, cp = read_u16le(cd, cp)
+    local elen
+    elen, cp = read_u16le(cd, cp)
+    local clen
+    clen, cp = read_u16le(cd, cp)
+    cp = cp + 2 + 2 + 4 -- disk + internal attrs + external attrs
+    local lfh_offset
+    lfh_offset, cp = read_u32le(cd, cp)
     local name = cd:sub(cp, cp + nlen - 1)
     cp = cp + nlen + elen + clen
 
@@ -306,7 +319,9 @@ local function delete_entries(archive, names)
     return 1
   end
   local drop = {}
-  for _, n in ipairs(names) do drop[n] = true end
+  for _, n in ipairs(names) do
+    drop[n] = true
+  end
   local kept = {}
   for _, e in ipairs(entries) do
     if not drop[e.name] then kept[#kept + 1] = e end
@@ -321,7 +336,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local recursive = false
   local junk_paths = false
@@ -336,15 +353,20 @@ local function main(argv)
       i = i + 1
       break
     elseif a == "-r" or a == "--recurse-paths" then
-      recursive = true; i = i + 1
+      recursive = true
+      i = i + 1
     elseif a == "-j" or a == "--junk-paths" then
-      junk_paths = true; i = i + 1
+      junk_paths = true
+      i = i + 1
     elseif a == "-d" or a == "--delete" then
-      delete_mode = true; i = i + 1
+      delete_mode = true
+      i = i + 1
     elseif a == "-g" or a == "--grow" then
-      append = true; i = i + 1
+      append = true
+      i = i + 1
     elseif a:match("^%-[0-9]$") then
-      level = tonumber(a:sub(2)); i = i + 1
+      level = tonumber(a:sub(2))
+      i = i + 1
     elseif a:sub(1, 1) == "-" and a ~= "-" then
       common.err(NAME, "invalid option: " .. a)
       return 2
@@ -354,14 +376,18 @@ local function main(argv)
   end
 
   local positional = {}
-  for j = i, #args do positional[#positional + 1] = args[j] end
+  for j = i, #args do
+    positional[#positional + 1] = args[j]
+  end
   if #positional == 0 then
     common.err(NAME, "missing archive name")
     return 2
   end
   local archive = positional[1]
   local names = {}
-  for j = 2, #positional do names[#names + 1] = positional[j] end
+  for j = 2, #positional do
+    names[#names + 1] = positional[j]
+  end
 
   if delete_mode then
     if #names == 0 then

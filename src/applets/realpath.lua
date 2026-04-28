@@ -34,7 +34,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local require_exist = false
   local no_symlink = false
@@ -74,7 +76,9 @@ local function main(argv)
   end
 
   local paths = {}
-  for j = i, #args do paths[#paths + 1] = args[j] end
+  for j = i, #args do
+    paths[#paths + 1] = args[j]
+  end
   if #paths == 0 then
     common.err(NAME, "missing operand")
     return 2
@@ -99,9 +103,7 @@ local function main(argv)
         -- Best-effort: strip prefix when result starts with relative_to.
         local base = readlink_f(relative_to)
         if base:sub(-1) ~= "/" then base = base .. "/" end
-        if result:sub(1, #base) == base then
-          result = result:sub(#base + 1)
-        end
+        if result:sub(1, #base) == base then result = result:sub(#base + 1) end
       end
       io.stdout:write(result, endch)
     end

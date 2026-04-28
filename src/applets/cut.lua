@@ -16,20 +16,14 @@ local function parse_list(s)
         stop = (b == "" or b == nil) and -1 or tonumber(b)
       else
         local n = common.parse_int(part)
-        if not n then
-          return nil, "invalid range: " .. part
-        end
+        if not n then return nil, "invalid range: " .. part end
         start, stop = n, n
       end
-      if start == nil or start < 1 then
-        return nil, "position must be >= 1: " .. part
-      end
+      if start == nil or start < 1 then return nil, "position must be >= 1: " .. part end
       ranges[#ranges + 1] = { start = start, stop = stop }
     end
   end
-  if #ranges == 0 then
-    return nil, "empty list"
-  end
+  if #ranges == 0 then return nil, "empty list" end
   return ranges
 end
 
@@ -51,9 +45,7 @@ local function positions(n, ranges)
 end
 
 local function split_by(line, sep)
-  if sep == "" then
-    return { line }
-  end
+  if sep == "" then return { line } end
   local parts = {}
   local start = 1
   while true do
@@ -70,12 +62,8 @@ end
 
 local function take_value(flag, args, idx)
   local a = args[idx]
-  if #a > #flag then
-    return a:sub(#flag + 1), idx + 1
-  end
-  if idx + 1 > #args then
-    return nil, idx
-  end
+  if #a > #flag then return a:sub(#flag + 1), idx + 1 end
+  if idx + 1 > #args then return nil, idx end
   return args[idx + 1], idx + 2
 end
 
@@ -149,9 +137,7 @@ local function main(argv)
     return 2
   end
 
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   local rc = 0
   for _, f in ipairs(files) do
@@ -164,9 +150,7 @@ local function main(argv)
         local body = line:gsub("\n$", "")
         if mode == "f" then
           if not body:find(delim, 1, true) then
-            if not suppress then
-              io.stdout:write(body, "\n")
-            end
+            if not suppress then io.stdout:write(body, "\n") end
           else
             local fields = split_by(body, delim)
             local pos = positions(#fields, ranges)
@@ -185,9 +169,7 @@ local function main(argv)
           io.stdout:write(table.concat(picked), "\n")
         end
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   return rc

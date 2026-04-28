@@ -10,8 +10,11 @@ local common = require("common")
 local NAME = "truncate"
 
 local SIZE_MULT = {
-  K = 1024, M = 1024 * 1024, G = 1024 * 1024 * 1024,
-  T = 1024 * 1024 * 1024 * 1024, P = 1024 * 1024 * 1024 * 1024 * 1024,
+  K = 1024,
+  M = 1024 * 1024,
+  G = 1024 * 1024 * 1024,
+  T = 1024 * 1024 * 1024 * 1024,
+  P = 1024 * 1024 * 1024 * 1024 * 1024,
 }
 
 --- Parse a size with optional operator. Returns (op, bytes) or nil.
@@ -19,8 +22,7 @@ local function parse_size(s)
   if not s or s == "" then return nil end
   local op = "="
   local first = s:sub(1, 1)
-  if first == "+" or first == "-" or first == "<" or first == ">"
-     or first == "/" or first == "%" then
+  if first == "+" or first == "-" or first == "<" or first == ">" or first == "/" or first == "%" then
     op = first
     s = s:sub(2)
   end
@@ -70,9 +72,7 @@ local function truncate_path(path, target)
   if not pipe then return false, "could not invoke truncate" end
   local out = pipe:read("*a")
   local ok = pipe:close()
-  if not ok then
-    return false, (out and out ~= "") and out:gsub("\n$", "") or "truncate failed"
-  end
+  if not ok then return false, (out and out ~= "") and out:gsub("\n$", "") or "truncate failed" end
   return true
 end
 

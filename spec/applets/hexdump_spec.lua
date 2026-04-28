@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("hexdump applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("default 16-byte hex words", function()
     local rc, out = helpers.invoke_with_stdin("hexdump", "abcd")

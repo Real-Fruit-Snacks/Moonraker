@@ -12,16 +12,16 @@ end
 
 local function take_value(flag, args, idx)
   local a = args[idx]
-  if #a > #flag then
-    return a:sub(#flag + 1), idx + 1
-  end
+  if #a > #flag then return a:sub(#flag + 1), idx + 1 end
   if idx + 1 > #args then return nil, idx end
   return args[idx + 1], idx + 2
 end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local separator = "\n"
   local fmt = nil
@@ -59,7 +59,9 @@ local function main(argv)
   end
 
   local nums = {}
-  for j = i, #args do nums[#nums + 1] = args[j] end
+  for j = i, #args do
+    nums[#nums + 1] = args[j]
+  end
 
   local start_s, incr_s, end_s
   if #nums == 1 then
@@ -131,9 +133,7 @@ local function main(argv)
     end
   end
 
-  if #formatted > 0 then
-    io.stdout:write(table.concat(formatted, separator), "\n")
-  end
+  if #formatted > 0 then io.stdout:write(table.concat(formatted, separator), "\n") end
   return 0
 end
 

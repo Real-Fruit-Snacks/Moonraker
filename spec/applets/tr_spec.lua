@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("tr applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("translates characters", function()
     local rc, out = helpers.invoke_with_stdin("tr", "hello", "a-z", "A-Z")

@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("id applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("prints uid/gid/groups by default", function()
     local rc, out = helpers.invoke_multicall("id")

@@ -6,9 +6,7 @@ local NAME = "sort"
 
 local function parse_key_spec(s)
   local field_part, opts = s:match("^([%d,]+)(.*)$")
-  if not field_part or field_part == "" then
-    return nil
-  end
+  if not field_part or field_part == "" then return nil end
   local start, stop
   if field_part:find(",", 1, true) then
     local a, b = field_part:match("^(%d*),(%d*)$")
@@ -59,19 +57,13 @@ end
 local function numeric_key(s)
   local stripped = s:gsub("^%s+", "")
   local sign_idx = 1
-  if stripped:sub(1, 1) == "+" or stripped:sub(1, 1) == "-" then
-    sign_idx = 2
-  end
+  if stripped:sub(1, 1) == "+" or stripped:sub(1, 1) == "-" then sign_idx = 2 end
   local body = stripped:sub(sign_idx)
   local num_str = body:match("^(%d+%.?%d*)") or body:match("^(%.?%d+)")
-  if not num_str or num_str == "" or num_str == "." then
-    return { 1, 0, s }
-  end
+  if not num_str or num_str == "" or num_str == "." then return { 1, 0, s } end
   local sign = stripped:sub(1, 1) == "-" and -1 or 1
   local val = tonumber(num_str)
-  if not val then
-    return { 1, 0, s }
-  end
+  if not val then return { 1, 0, s } end
   return { 0, sign * val, s }
 end
 
@@ -84,12 +76,8 @@ end
 
 local function take_value(flag, args, idx)
   local a = args[idx]
-  if #a > #flag then
-    return a:sub(#flag + 1), idx + 1
-  end
-  if idx + 1 > #args then
-    return nil, idx
-  end
+  if #a > #flag then return a:sub(#flag + 1), idx + 1 end
+  if idx + 1 > #args then return nil, idx end
   return args[idx + 1], idx + 2
 end
 
@@ -156,11 +144,16 @@ local function main(argv)
       i = ni
     else
       for ch in a:sub(2):gmatch(".") do
-        if ch == "r" then reverse = true
-        elseif ch == "n" then numeric = true
-        elseif ch == "u" then unique = true
-        elseif ch == "f" then ignore_case = true
-        elseif ch == "b" then ignore_leading_blanks = true
+        if ch == "r" then
+          reverse = true
+        elseif ch == "n" then
+          numeric = true
+        elseif ch == "u" then
+          unique = true
+        elseif ch == "f" then
+          ignore_case = true
+        elseif ch == "b" then
+          ignore_leading_blanks = true
         else
           common.err(NAME, "invalid option: -" .. ch)
           return 2
@@ -170,9 +163,7 @@ local function main(argv)
     end
   end
 
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   local lines = {}
   local rc = 0
@@ -185,19 +176,13 @@ local function main(argv)
       for line in common.iter_lines_keep_nl(fh) do
         lines[#lines + 1] = (line:gsub("\n$", ""))
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
 
   local function base_transform(s)
-    if ignore_leading_blanks then
-      s = s:gsub("^%s+", "")
-    end
-    if ignore_case then
-      s = s:lower()
-    end
+    if ignore_leading_blanks then s = s:gsub("^%s+", "") end
+    if ignore_case then s = s:lower() end
     return s
   end
 
@@ -252,20 +237,22 @@ local function main(argv)
     local deduped = {}
     for _, line in ipairs(lines) do
       local k = key_fn(line)
-      local sk = type(k) == "table" and table.concat(
-        (function()
-          local strs = {}
-          for _, p in ipairs(k) do
-            if type(p) == "table" then
-              strs[#strs + 1] = tostring(p[2]) .. "\0" .. p[3]
-            else
-              strs[#strs + 1] = tostring(p)
-            end
-          end
-          return strs
-        end)(),
-        "\1"
-      ) or tostring(k)
+      local sk = type(k) == "table"
+          and table.concat(
+            (function()
+              local strs = {}
+              for _, p in ipairs(k) do
+                if type(p) == "table" then
+                  strs[#strs + 1] = tostring(p[2]) .. "\0" .. p[3]
+                else
+                  strs[#strs + 1] = tostring(p)
+                end
+              end
+              return strs
+            end)(),
+            "\1"
+          )
+        or tostring(k)
       if not seen[sk] then
         seen[sk] = true
         deduped[#deduped + 1] = line
@@ -289,9 +276,7 @@ local function main(argv)
   for _, line in ipairs(lines) do
     out_fh:write(line, "\n")
   end
-  if close_out then
-    out_fh:close()
-  end
+  if close_out then out_fh:close() end
   return rc
 end
 

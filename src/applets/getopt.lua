@@ -53,7 +53,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local short_opts = ""
   local long_opts = {}
@@ -68,9 +70,11 @@ local function main(argv)
       break
     end
     if (a == "-o" or a == "--options") and i + 1 <= #args then
-      short_opts = args[i + 1]; i = i + 2
+      short_opts = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 2) == "-o" and #a > 2 then
-      short_opts = a:sub(3); i = i + 1
+      short_opts = a:sub(3)
+      i = i + 1
     elseif (a == "-l" or a == "--longoptions" or a == "--long") and i + 1 <= #args then
       for p in (args[i + 1] .. ","):gmatch("([^,]+)") do
         if p ~= "" then long_opts[#long_opts + 1] = p end
@@ -89,11 +93,13 @@ local function main(argv)
     elseif a == "-a" or a == "--alternative" then
       i = i + 1
     elseif a == "-u" or a == "--unquoted" then
-      quoted_style = "raw"; i = i + 1
+      quoted_style = "raw"
+      i = i + 1
     elseif a == "-s" or a == "--shell" then
       i = i + (i + 1 <= #args and 2 or 1)
     elseif a == "+" then
-      options_first = true; i = i + 1
+      options_first = true
+      i = i + 1
     elseif a:sub(1, 1) == "-" and a ~= "-" and #a > 1 then
       common.err(NAME, "unknown option: " .. a)
       return 2
@@ -103,7 +109,9 @@ local function main(argv)
   end
 
   local inputs = {}
-  for j = i, #args do inputs[#inputs + 1] = args[j] end
+  for j = i, #args do
+    inputs[#inputs + 1] = args[j]
+  end
 
   local short_map = parse_short(short_opts)
   local long_map = parse_long(long_opts)
@@ -114,7 +122,9 @@ local function main(argv)
   while j <= #inputs do
     local arg = inputs[j]
     if arg == "--" then
-      for k = j + 1, #inputs do operands[#operands + 1] = inputs[k] end
+      for k = j + 1, #inputs do
+        operands[#operands + 1] = inputs[k]
+      end
       break
     end
     if arg:sub(1, 2) == "--" and #arg > 2 then
@@ -197,7 +207,9 @@ local function main(argv)
       j = j + 1
     else
       if options_first then
-        for k = j, #inputs do operands[#operands + 1] = inputs[k] end
+        for k = j, #inputs do
+          operands[#operands + 1] = inputs[k]
+        end
         break
       end
       operands[#operands + 1] = arg
@@ -211,11 +223,15 @@ local function main(argv)
     if p[2] ~= nil then parts[#parts + 1] = p[2] end
   end
   parts[#parts + 1] = "--"
-  for _, op in ipairs(operands) do parts[#parts + 1] = op end
+  for _, op in ipairs(operands) do
+    parts[#parts + 1] = op
+  end
 
   if quoted_style == "shell" then
     local quoted = {}
-    for _, p in ipairs(parts) do quoted[#quoted + 1] = shell_quote(p) end
+    for _, p in ipairs(parts) do
+      quoted[#quoted + 1] = shell_quote(p)
+    end
     io.stdout:write(table.concat(quoted, " "), "\n")
   else
     io.stdout:write(table.concat(parts, " "), "\n")

@@ -2,9 +2,14 @@ local helpers = require("helpers")
 
 describe("gzip applet", function()
   local cleanup = {}
-  before_each(function() helpers.load_applets(); cleanup = {} end)
+  before_each(function()
+    helpers.load_applets()
+    cleanup = {}
+  end)
   after_each(function()
-    for _, p in ipairs(cleanup) do pcall(os.remove, p) end
+    for _, p in ipairs(cleanup) do
+      pcall(os.remove, p)
+    end
   end)
 
   local function tmp(content)

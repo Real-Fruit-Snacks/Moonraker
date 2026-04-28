@@ -37,9 +37,7 @@ local function main(argv)
         end
         io.stdout:write(reverse_string(body), nl)
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()

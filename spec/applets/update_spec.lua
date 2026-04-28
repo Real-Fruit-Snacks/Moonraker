@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("update applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("rejects unknown options", function()
     local rc = helpers.invoke_multicall("update", "--bogus")

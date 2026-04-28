@@ -9,9 +9,7 @@ local function parse_tabs(spec)
   local out = {}
   for p in clean:gmatch("[^,]+") do
     local n = common.parse_int(p)
-    if not n then
-      return nil
-    end
+    if not n then return nil end
     out[#out + 1] = n
   end
   return out
@@ -67,9 +65,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
   local rc = 0
 
   for _, f in ipairs(files) do
@@ -117,16 +113,12 @@ local function main(argv)
           else
             out[#out + 1] = ch
             col = col + 1
-            if ch ~= " " then
-              seen_non_blank = true
-            end
+            if ch ~= " " then seen_non_blank = true end
           end
         end
         io.stdout:write(table.concat(out), trailing)
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()

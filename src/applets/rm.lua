@@ -12,14 +12,10 @@ local function remove_tree(lfs, path)
       local attr = lfs.symlinkattributes(sub)
       if attr and attr.mode == "directory" then
         local ok, err = remove_tree(lfs, sub)
-        if not ok then
-          return false, err
-        end
+        if not ok then return false, err end
       else
         local ok, err = os.remove(sub)
-        if not ok then
-          return false, err
-        end
+        if not ok then return false, err end
       end
     end
   end
@@ -44,9 +40,7 @@ local function main(argv)
       table.remove(args, i)
       break
     end
-    if a:sub(1, 1) ~= "-" or #a < 2 then
-      break
-    end
+    if a:sub(1, 1) ~= "-" or #a < 2 then break end
     for ch in a:sub(2):gmatch(".") do
       if ch == "r" or ch == "R" then
         recursive = true
@@ -69,9 +63,7 @@ local function main(argv)
     targets[#targets + 1] = args[j]
   end
   if #targets == 0 then
-    if force then
-      return 0
-    end
+    if force then return 0 end
     common.err(NAME, "missing operand")
     return 2
   end

@@ -10,9 +10,7 @@ end
 
 local function basename_str(s)
   local stripped = rstrip_seps(s)
-  if stripped == "" then
-    return s ~= "" and s:sub(1, 1) or ""
-  end
+  if stripped == "" then return s ~= "" and s:sub(1, 1) or "" end
   -- Find the last separator (either / or \) by scanning right-to-left.
   local last = 0
   for i = #stripped, 1, -1 do
@@ -22,9 +20,7 @@ local function basename_str(s)
       break
     end
   end
-  if last > 0 then
-    return stripped:sub(last + 1)
-  end
+  if last > 0 then return stripped:sub(last + 1) end
   return stripped
 end
 
@@ -88,9 +84,7 @@ local function main(argv)
 
   for _, p in ipairs(paths) do
     local name = basename_str(p)
-    if suffix ~= "" and name ~= suffix and name:sub(-#suffix) == suffix then
-      name = name:sub(1, -(#suffix + 1))
-    end
+    if suffix ~= "" and name ~= suffix and name:sub(-#suffix) == suffix then name = name:sub(1, -(#suffix + 1)) end
     io.stdout:write(name, endch)
   end
   return 0

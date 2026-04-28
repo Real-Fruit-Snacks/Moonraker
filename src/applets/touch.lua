@@ -14,13 +14,9 @@ local function parse_t(s)
   local secs = "00"
   if s:find(".", 1, true) then
     s, secs = s:match("^(.+)%.(%d+)$")
-    if not s then
-      return nil
-    end
+    if not s then return nil end
   end
-  if not s:match("^%d+$") or not secs:match("^%d+$") then
-    return nil
-  end
+  if not s:match("^%d+$") or not secs:match("^%d+$") then return nil end
   if #s == 8 then
     -- MMDDhhmm — current year
     s = string.format("%04d%s", tonumber(os.date("%Y")), s)
@@ -29,9 +25,7 @@ local function parse_t(s)
     local yy = tonumber(s:sub(1, 2))
     s = (yy < 69 and "20" or "19") .. s
   end
-  if #s ~= 12 then
-    return nil
-  end
+  if #s ~= 12 then return nil end
   local ok, t = pcall(os.time, {
     year = tonumber(s:sub(1, 4)),
     month = tonumber(s:sub(5, 6)),
@@ -40,23 +34,18 @@ local function parse_t(s)
     min = tonumber(s:sub(11, 12)),
     sec = tonumber(secs),
   })
-  if not ok then
-    return nil
-  end
+  if not ok then return nil end
   return t
 end
 
 local function parse_d(s)
   s = s:match("^%s*(.-)%s*$")
   -- ISO 8601 "YYYY-MM-DDTHH:MM:SS" or "YYYY-MM-DD HH:MM:SS"
-  local y, mo, d, h, mi, se =
-    s:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)[Tt ]?(%d?%d?):?(%d?%d?):?(%d?%d?)Z?$")
+  local y, mo, d, h, mi, se = s:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)[Tt ]?(%d?%d?):?(%d?%d?):?(%d?%d?)Z?$")
   if not y then
     -- Just a date
     y, mo, d = s:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
-    if not y then
-      return nil
-    end
+    if not y then return nil end
     h, mi, se = "0", "0", "0"
   end
   local ok, t = pcall(os.time, {
@@ -67,9 +56,7 @@ local function parse_d(s)
     min = tonumber(mi ~= "" and mi or 0),
     sec = tonumber(se ~= "" and se or 0),
   })
-  if not ok then
-    return nil
-  end
+  if not ok then return nil end
   return t
 end
 

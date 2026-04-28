@@ -7,9 +7,7 @@ local NAME = "sleep"
 local MULT = { s = 1.0, m = 60.0, h = 3600.0, d = 86400.0 }
 
 local function parse_duration(s)
-  if not s or s == "" then
-    return nil
-  end
+  if not s or s == "" then return nil end
   local suffix = s:sub(-1)
   local body, mult
   if MULT[suffix] then
@@ -20,9 +18,7 @@ local function parse_duration(s)
     mult = 1.0
   end
   local n = tonumber(body)
-  if n == nil then
-    return nil
-  end
+  if n == nil then return nil end
   return n * mult
 end
 
@@ -31,9 +27,7 @@ end
 ---   * `sleep N` via os.execute on POSIX
 ---   * `timeout /t N /nobreak` on Windows
 local function sleep_seconds(seconds)
-  if seconds <= 0 then
-    return
-  end
+  if seconds <= 0 then return end
   if common.is_windows() then
     -- timeout takes integer seconds; round up to honour minimum delay.
     local n = math.ceil(seconds)

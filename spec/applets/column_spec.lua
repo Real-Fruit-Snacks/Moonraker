@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("column applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("-t aligns columns by whitespace", function()
     local input = "a bb ccc\nxxx y zz\n"

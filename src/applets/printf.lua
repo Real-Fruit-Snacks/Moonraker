@@ -9,9 +9,17 @@ local common = require("common")
 local NAME = "printf"
 
 local ESCAPES = {
-  n = "\n", t = "\t", r = "\r", ["\\"] = "\\",
-  a = "\a", b = "\b", f = "\f", v = "\v",
-  ["0"] = "\0", ["'"] = "'", ['"'] = '"',
+  n = "\n",
+  t = "\t",
+  r = "\r",
+  ["\\"] = "\\",
+  a = "\a",
+  b = "\b",
+  f = "\f",
+  v = "\v",
+  ["0"] = "\0",
+  ["'"] = "'",
+  ['"'] = '"',
 }
 
 local function process_escapes(s)
@@ -41,9 +49,7 @@ local function coerce_int(arg)
   local n = tonumber(arg)
   if n then return math.floor(n) end
   -- Try base auto-detection (0x, 0o)
-  if arg:sub(1, 2) == "0x" or arg:sub(1, 2) == "0X" then
-    return tonumber(arg:sub(3), 16) or 0
-  end
+  if arg:sub(1, 2) == "0x" or arg:sub(1, 2) == "0X" then return tonumber(arg:sub(3), 16) or 0 end
   return 0
 end
 
@@ -101,15 +107,12 @@ local function apply_once(fmt, values, start_idx)
       consumed = consumed + 1
 
       local letter = spec == "u" and "d" or spec
-      local fmtspec = "%" .. flags .. width
-        .. (precision ~= "" and "." .. precision or "") .. letter
+      local fmtspec = "%" .. flags .. width .. (precision ~= "" and "." .. precision or "") .. letter
 
       local ok, formatted = pcall(function()
-        if spec == "d" or spec == "i" or spec == "u"
-           or spec == "o" or spec == "x" or spec == "X" then
+        if spec == "d" or spec == "i" or spec == "u" or spec == "o" or spec == "x" or spec == "X" then
           return string.format(fmtspec, coerce_int(arg))
-        elseif spec == "e" or spec == "E" or spec == "f"
-               or spec == "g" or spec == "G" then
+        elseif spec == "e" or spec == "E" or spec == "f" or spec == "g" or spec == "G" then
           return string.format(fmtspec, coerce_float(arg))
         elseif spec == "c" then
           return string.format(fmtspec, arg:sub(1, 1))
@@ -129,7 +132,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   if #args == 0 then
     common.err(NAME, "missing format")
@@ -137,7 +142,9 @@ local function main(argv)
   end
   local fmt = process_escapes(args[1])
   local values = {}
-  for j = 2, #args do values[#values + 1] = args[j] end
+  for j = 2, #args do
+    values[#values + 1] = args[j]
+  end
 
   local idx = 1
   local text, had_spec, consumed = apply_once(fmt, values, idx)

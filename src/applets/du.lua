@@ -26,12 +26,8 @@ end
 local function depth_of(root, sub)
   if sub == root then return 0 end
   local prefix = root
-  if prefix:sub(-1) ~= "/" and prefix:sub(-1) ~= "\\" then
-    prefix = prefix .. common.path_sep()
-  end
-  if sub:sub(1, #prefix) ~= prefix then
-    return 0
-  end
+  if prefix:sub(-1) ~= "/" and prefix:sub(-1) ~= "\\" then prefix = prefix .. common.path_sep() end
+  if sub:sub(1, #prefix) ~= prefix then return 0 end
   local rel = sub:sub(#prefix + 1)
   local depth = 0
   for _ in rel:gmatch("[/\\]") do
@@ -84,13 +80,20 @@ local function main(argv)
       return 2
     else
       for ch in a:sub(2):gmatch(".") do
-        if ch == "s" then summary = true
-        elseif ch == "a" then all_files = true
-        elseif ch == "h" then human = true
-        elseif ch == "b" then bytes_exact = true
-        elseif ch == "c" then grand_total = true
-        elseif ch == "k" then block_size = 1024
-        elseif ch == "m" then block_size = 1024 * 1024
+        if ch == "s" then
+          summary = true
+        elseif ch == "a" then
+          all_files = true
+        elseif ch == "h" then
+          human = true
+        elseif ch == "b" then
+          bytes_exact = true
+        elseif ch == "c" then
+          grand_total = true
+        elseif ch == "k" then
+          block_size = 1024
+        elseif ch == "m" then
+          block_size = 1024 * 1024
         end
       end
       i = i + 1
@@ -101,9 +104,7 @@ local function main(argv)
   for j = i, #args do
     paths[#paths + 1] = args[j]
   end
-  if #paths == 0 then
-    paths = { "." }
-  end
+  if #paths == 0 then paths = { "." } end
 
   local lfs = common.try_lfs()
   local rc = 0
@@ -134,9 +135,7 @@ local function main(argv)
           totals[parent] = (totals[parent] or 0) + sz
           if all_files and not summary then
             local d = depth_of(root, p)
-            if not max_depth or d <= max_depth then
-              emit(sz, p)
-            end
+            if not max_depth or d <= max_depth then emit(sz, p) end
           end
         end
       end, { bottom_up = true })
@@ -145,29 +144,21 @@ local function main(argv)
       common.walk(root, function(p, a)
         if a.mode == "directory" then
           local parent = common.dirname(p)
-          if p ~= root and totals[parent] then
-            totals[parent] = totals[parent] + (totals[p] or 0)
-          end
+          if p ~= root and totals[parent] then totals[parent] = totals[parent] + (totals[p] or 0) end
           if not summary then
             local d = depth_of(root, p)
-            if not max_depth or d <= max_depth then
-              emit(totals[p] or 0, p)
-            end
+            if not max_depth or d <= max_depth then emit(totals[p] or 0, p) end
           end
         end
       end, { bottom_up = true })
 
       local total = totals[root] or 0
-      if summary then
-        emit(total, root)
-      end
+      if summary then emit(total, root) end
       running_total = running_total + total
     end
   end
 
-  if grand_total then
-    emit(running_total, "total")
-  end
+  if grand_total then emit(running_total, "total") end
   return rc
 end
 

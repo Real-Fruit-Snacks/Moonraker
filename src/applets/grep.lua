@@ -77,9 +77,7 @@ local function walk_dir(path, out, lfs)
   if attr.mode == "directory" then
     local entries = {}
     for entry in lfs.dir(path) do
-      if entry ~= "." and entry ~= ".." then
-        entries[#entries + 1] = entry
-      end
+      if entry ~= "." and entry ~= ".." then entries[#entries + 1] = entry end
     end
     table.sort(entries)
     for _, entry in ipairs(entries) do
@@ -122,33 +120,56 @@ local function main(argv)
       end
       local n = parse_count(a, args[i + 1])
       if n == nil then return 2 end
-      if a == "-A" then after_n = math.max(after_n, n)
-      elseif a == "-B" then before_n = math.max(before_n, n)
-      else before_n = math.max(before_n, n); after_n = math.max(after_n, n) end
+      if a == "-A" then
+        after_n = math.max(after_n, n)
+      elseif a == "-B" then
+        before_n = math.max(before_n, n)
+      else
+        before_n = math.max(before_n, n)
+        after_n = math.max(after_n, n)
+      end
       i = i + 2
-    elseif #a > 2 and (a:sub(1, 2) == "-A" or a:sub(1, 2) == "-B" or a:sub(1, 2) == "-C")
-      and a:sub(3):match("^%d+$") then
+    elseif
+      #a > 2
+      and (a:sub(1, 2) == "-A" or a:sub(1, 2) == "-B" or a:sub(1, 2) == "-C")
+      and a:sub(3):match("^%d+$")
+    then
       local flag = a:sub(1, 2)
       local n = parse_count(flag, a:sub(3))
       if n == nil then return 2 end
-      if flag == "-A" then after_n = math.max(after_n, n)
-      elseif flag == "-B" then before_n = math.max(before_n, n)
-      else before_n = math.max(before_n, n); after_n = math.max(after_n, n) end
+      if flag == "-A" then
+        after_n = math.max(after_n, n)
+      elseif flag == "-B" then
+        before_n = math.max(before_n, n)
+      else
+        before_n = math.max(before_n, n)
+        after_n = math.max(after_n, n)
+      end
       i = i + 1
     elseif a:sub(1, 1) ~= "-" or #a < 2 or a == "-" then
       break
     else
       for ch in a:sub(2):gmatch(".") do
-        if ch == "i" then ignore_case = true
-        elseif ch == "v" then invert = true
-        elseif ch == "n" then show_line_num = true
-        elseif ch == "r" or ch == "R" then recursive = true
-        elseif ch == "F" then fixed_string = true
-        elseif ch == "l" then list_files = true
-        elseif ch == "c" then count_only = true
-        elseif ch == "w" then word_match = true
-        elseif ch == "o" then only_matching = true
-        elseif ch == "q" then quiet = true
+        if ch == "i" then
+          ignore_case = true
+        elseif ch == "v" then
+          invert = true
+        elseif ch == "n" then
+          show_line_num = true
+        elseif ch == "r" or ch == "R" then
+          recursive = true
+        elseif ch == "F" then
+          fixed_string = true
+        elseif ch == "l" then
+          list_files = true
+        elseif ch == "c" then
+          count_only = true
+        elseif ch == "w" then
+          word_match = true
+        elseif ch == "o" then
+          only_matching = true
+        elseif ch == "q" then
+          quiet = true
         elseif ch == "E" then -- luacheck: ignore
           -- accepted for compat; we don't change patterns since Lua
           -- patterns are the only engine we have right now
@@ -176,16 +197,12 @@ local function main(argv)
     targets[#targets + 1] = remaining[j]
   end
 
-  if fixed_string then
-    pattern = escape_pattern(pattern)
-  end
+  if fixed_string then pattern = escape_pattern(pattern) end
   if word_match then
     -- Lua patterns: %f[%w_] is a frontier pattern, similar to \b at start.
     pattern = "%f[%w_]" .. pattern .. "%f[^%w_]"
   end
-  if ignore_case then
-    pattern = pattern:lower()
-  end
+  if ignore_case then pattern = pattern:lower() end
 
   -- Validate the pattern by attempting a no-op match.
   local ok = pcall(string.find, "", pattern)
@@ -194,9 +211,7 @@ local function main(argv)
     return 2
   end
 
-  if #targets == 0 then
-    targets = { "-" }
-  end
+  if #targets == 0 then targets = { "-" } end
 
   if recursive then
     local lfs = common.try_lfs()
@@ -235,9 +250,7 @@ local function main(argv)
         local found = find_all(needle, pattern)
         local has = #found > 0
         local is_match = has ~= invert
-        if is_match then
-          match_map[n] = invert and {} or found
-        end
+        if is_match then match_map[n] = invert and {} or found end
       end
 
       local function any_matches()
@@ -253,7 +266,9 @@ local function main(argv)
         end
       elseif count_only then
         local cnt = 0
-        for _ in pairs(match_map) do cnt = cnt + 1 end
+        for _ in pairs(match_map) do
+          cnt = cnt + 1
+        end
         if show_filename then
           io.stdout:write(t, ":", tostring(cnt), "\n")
         else
@@ -273,14 +288,14 @@ local function main(argv)
         if any_matches() then
           matched_any = true
           local to_print = {}
-          for n in pairs(match_map) do to_print[n] = true end
+          for n in pairs(match_map) do
+            to_print[n] = true
+          end
           if before_n > 0 or after_n > 0 then
             local total = #lines
             for n in pairs(match_map) do
               for k = math.max(1, n - before_n), math.min(total, n + after_n) do
-                if to_print[k] == nil then
-                  to_print[k] = false
-                end
+                if to_print[k] == nil then to_print[k] = false end
               end
             end
           end
@@ -288,9 +303,7 @@ local function main(argv)
           local prev_printed = nil
           for n, text in ipairs(lines) do
             if to_print[n] ~= nil then
-              if has_context and prev_printed and n - prev_printed > 1 then
-                io.stdout:write("--\n")
-              end
+              if has_context and prev_printed and n - prev_printed > 1 then io.stdout:write("--\n") end
               write_line(t, n, text, to_print[n])
               prev_printed = n
             end

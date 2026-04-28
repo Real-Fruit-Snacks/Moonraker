@@ -6,7 +6,9 @@ local NAME = "which"
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local all_matches = false
 
@@ -30,7 +32,9 @@ local function main(argv)
   end
 
   local names = {}
-  for j = i, #args do names[#names + 1] = args[j] end
+  for j = i, #args do
+    names[#names + 1] = args[j]
+  end
   if #names == 0 then
     common.err(NAME, "missing command name")
     return 2
@@ -55,7 +59,10 @@ local function main(argv)
   local function is_file(p)
     if not lfs then
       local fh = io.open(p, "rb")
-      if fh then fh:close(); return true end
+      if fh then
+        fh:close()
+        return true
+      end
       return false
     end
     local attr = lfs.attributes(p)

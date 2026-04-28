@@ -5,9 +5,7 @@ local common = require("common")
 local NAME = "xargs"
 
 local function shell_quote(s)
-  if common.is_windows() then
-    return '"' .. s:gsub('"', '\\"') .. '"'
-  end
+  if common.is_windows() then return '"' .. s:gsub('"', '\\"') .. '"' end
   return "'" .. s:gsub("'", "'\\''") .. "'"
 end
 
@@ -83,7 +81,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local n_per_call, lines_per_call, replace_str = nil, nil, nil
   local null_sep, delimiter = false, nil
@@ -123,11 +123,14 @@ local function main(argv)
       input_file = v
       i = ni
     elseif a == "-0" or a == "--null" then
-      null_sep = true; i = i + 1
+      null_sep = true
+      i = i + 1
     elseif a == "-r" or a == "--no-run-if-empty" then
-      no_run_empty = true; i = i + 1
+      no_run_empty = true
+      i = i + 1
     elseif a == "-t" then
-      trace = true; i = i + 1
+      trace = true
+      i = i + 1
     elseif a:sub(1, 1) ~= "-" then
       break
     else
@@ -137,7 +140,9 @@ local function main(argv)
   end
 
   local cmd_template = {}
-  for j = i, #args do cmd_template[#cmd_template + 1] = args[j] end
+  for j = i, #args do
+    cmd_template[#cmd_template + 1] = args[j]
+  end
   if #cmd_template == 0 then cmd_template = { "echo" } end
 
   local data
@@ -176,9 +181,7 @@ local function main(argv)
   if #tokens == 0 and no_run_empty then return 0 end
 
   local function run(cmd_argv)
-    if trace then
-      io.stderr:write(table.concat(cmd_argv, " "), "\n")
-    end
+    if trace then io.stderr:write(table.concat(cmd_argv, " "), "\n") end
     local parts = {}
     for _, p in ipairs(cmd_argv) do
       parts[#parts + 1] = shell_quote(p)
@@ -221,8 +224,12 @@ local function main(argv)
   local rc = 0
   for _, g in ipairs(groups) do
     local cmd_argv = {}
-    for _, a in ipairs(cmd_template) do cmd_argv[#cmd_argv + 1] = a end
-    for _, t in ipairs(g) do cmd_argv[#cmd_argv + 1] = t end
+    for _, a in ipairs(cmd_template) do
+      cmd_argv[#cmd_argv + 1] = a
+    end
+    for _, t in ipairs(g) do
+      cmd_argv[#cmd_argv + 1] = t
+    end
     local r = run(cmd_argv)
     if r ~= 0 then rc = r end
   end

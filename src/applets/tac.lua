@@ -32,14 +32,10 @@ local function split_keep_empty(s, sep)
 end
 
 local function process_buffer(data, sep, before)
-  if data == "" then
-    return ""
-  end
+  if data == "" then return "" end
   local parts = split_keep_empty(data, sep)
   local trailing = data:sub(-#sep) == sep
-  if trailing and parts[#parts] == "" then
-    parts[#parts] = nil
-  end
+  if trailing and parts[#parts] == "" then parts[#parts] = nil end
   reverse_array(parts)
 
   if before then
@@ -48,16 +44,12 @@ local function process_buffer(data, sep, before)
       pieces[#pieces + 1] = sep .. p
     end
     local out = table.concat(pieces)
-    if out:sub(1, #sep) == sep and data:sub(1, #sep) ~= sep then
-      out = out:sub(#sep + 1)
-    end
+    if out:sub(1, #sep) == sep and data:sub(1, #sep) ~= sep then out = out:sub(#sep + 1) end
     return out
   end
 
   local out = table.concat(parts, sep)
-  if trailing then
-    out = out .. sep
-  end
+  if trailing then out = out .. sep end
   return out
 end
 
@@ -101,9 +93,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   local rc = 0
   for _, f in ipairs(files) do
@@ -113,9 +103,7 @@ local function main(argv)
       rc = 1
     else
       local data = common.read_all(fh)
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
       io.stdout:write(process_buffer(data, sep, before))
     end
   end

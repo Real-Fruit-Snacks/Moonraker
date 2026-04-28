@@ -6,17 +6,13 @@ local NAME = "tail"
 
 local function ring_push(ring, max, item)
   ring[#ring + 1] = item
-  if #ring > max then
-    table.remove(ring, 1)
-  end
+  if #ring > max then table.remove(ring, 1) end
 end
 
 local function emit_initial_tail(fh, bytes_mode, byte_count, lines)
   if bytes_mode then
     local data = common.read_all(fh)
-    if byte_count > 0 then
-      io.stdout:write(data:sub(-byte_count))
-    end
+    if byte_count > 0 then io.stdout:write(data:sub(-byte_count)) end
     return
   end
   local ring = {}
@@ -57,9 +53,7 @@ local function follow(paths, multi, interval)
       entries[#entries + 1] = { path = f, fh = fh, ino = ino }
     end
   end
-  if #entries == 0 then
-    return 0
-  end
+  if #entries == 0 then return 0 end
 
   local last_path = entries[#entries].path
 
@@ -71,9 +65,7 @@ local function follow(paths, multi, interval)
         local attr = lfs.attributes(e.path)
         if attr then
           local pos = e.fh:seek()
-          if attr.size and attr.size < pos then
-            e.fh:seek("set", 0)
-          end
+          if attr.size and attr.size < pos then e.fh:seek("set", 0) end
           if e.ino and attr.ino and attr.ino ~= e.ino then
             e.fh:close()
             local newfh = io.open(e.path, "rb")
@@ -95,9 +87,7 @@ local function follow(paths, multi, interval)
         got_any = true
       end
     end
-    if not got_any then
-      sleep(interval)
-    end
+    if not got_any then sleep(interval) end
   end
 end
 
@@ -167,9 +157,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
   local multi = #files > 1
   local rc = 0
 
@@ -180,33 +168,23 @@ local function main(argv)
       rc = 1
     else
       if multi then
-        if idx > 1 then
-          io.stdout:write("\n")
-        end
+        if idx > 1 then io.stdout:write("\n") end
         io.stdout:write("==> ", f, " <==\n")
       end
       emit_initial_tail(fh, bytes_mode, byte_count, lines)
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()
 
-  if not follow_mode then
-    return rc
-  end
+  if not follow_mode then return rc end
 
   -- Follow only real files; "-" can't be re-opened.
   local follow_paths = {}
   for _, f in ipairs(files) do
-    if f ~= "-" then
-      follow_paths[#follow_paths + 1] = f
-    end
+    if f ~= "-" then follow_paths[#follow_paths + 1] = f end
   end
-  if #follow_paths == 0 then
-    return rc
-  end
+  if #follow_paths == 0 then return rc end
   local f_rc = follow(follow_paths, multi, interval)
   return rc ~= 0 and rc or f_rc
 end

@@ -9,7 +9,9 @@ describe("paste applet", function()
   end)
 
   after_each(function()
-    for _, p in ipairs(tmp_files) do os.remove(p) end
+    for _, p in ipairs(tmp_files) do
+      os.remove(p)
+    end
   end)
 
   local function tmp(content)

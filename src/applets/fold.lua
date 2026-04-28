@@ -16,9 +16,7 @@ local function emit_wrapped(line, width, space_break)
           break
         end
       end
-      if idx and idx > 1 then
-        cut = idx
-      end
+      if idx and idx > 1 then cut = idx end
     end
     io.stdout:write(line:sub(1, cut), "\n")
     line = line:sub(cut + 1)
@@ -75,9 +73,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
   local rc = 0
 
   for _, f in ipairs(files) do
@@ -98,9 +94,7 @@ local function main(argv)
         emit_wrapped(body, width, space_break)
         io.stdout:write(nl)
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()

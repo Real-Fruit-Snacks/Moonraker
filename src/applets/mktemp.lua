@@ -9,9 +9,7 @@ local NAME = "mktemp"
 local function from_template(tmpl)
   local base = common.basename(tmpl)
   local dirpart = common.dirname(tmpl)
-  if dirpart == "." and not tmpl:find("[/\\]") then
-    dirpart = ""
-  end
+  if dirpart == "." and not tmpl:find("[/\\]") then dirpart = "" end
 
   -- Find rightmost X-run
   local end_idx = #base + 1
@@ -23,9 +21,7 @@ local function from_template(tmpl)
     start_idx = start_idx - 1
   end
   local n = end_idx - start_idx
-  if n < 3 then
-    return "", "", 0
-  end
+  if n < 3 then return "", "", 0 end
   local pre_base = base:sub(1, start_idx - 1)
   local suffix = base:sub(end_idx)
   local prefix = dirpart ~= "" and common.path_join(dirpart, pre_base) or pre_base
@@ -57,17 +53,13 @@ local function try_create(path, make_dir)
     if lfs and lfs.attributes(path) then
       return false -- already exists
     end
-    if lfs then
-      return lfs.mkdir(path) == true
-    end
+    if lfs then return lfs.mkdir(path) == true end
     return false
   end
   -- Test exclusive creation: open mode "wb" overwrites if exists. We need
   -- O_EXCL semantics; lfs doesn't expose that. Approximate by checking
   -- existence first, then opening. Race condition acceptable for mktemp.
-  if lfs and lfs.attributes(path) then
-    return false
-  end
+  if lfs and lfs.attributes(path) then return false end
   local fh = io.open(path, "wb")
   if not fh then return false end
   fh:close()
@@ -129,15 +121,11 @@ local function main(argv)
     end
   end
 
-  if template == nil then
-    template = "tmp.XXXXXXXXXX"
-  end
+  if template == nil then template = "tmp.XXXXXXXXXX" end
 
   local prefix, suffix, n = from_template(template)
   if n == 0 then
-    if not quiet then
-      common.err(NAME, "too few X's in template '" .. template .. "'")
-    end
+    if not quiet then common.err(NAME, "too few X's in template '" .. template .. "'") end
     return 1
   end
 
@@ -156,7 +144,7 @@ local function main(argv)
   local function candidate()
     local rand = random_suffix(n)
     local base_full = (target_dir and target_dir ~= "")
-      and common.path_join(target_dir, common.basename(prefix) .. rand .. suffix)
+        and common.path_join(target_dir, common.basename(prefix) .. rand .. suffix)
       or (prefix .. rand .. suffix)
     return base_full
   end
@@ -171,9 +159,7 @@ local function main(argv)
   end
 
   if not path then
-    if not quiet then
-      common.err(NAME, "could not create temporary " .. (make_dir and "directory" or "file"))
-    end
+    if not quiet then common.err(NAME, "could not create temporary " .. (make_dir and "directory" or "file")) end
     return 1
   end
 

@@ -12,16 +12,29 @@ local socket = require("socket")
 local NAME = "dig"
 
 local TYPE_NUM = {
-  A = 1, NS = 2, CNAME = 5, SOA = 6, PTR = 12,
-  MX = 15, TXT = 16, AAAA = 28, ANY = 255,
+  A = 1,
+  NS = 2,
+  CNAME = 5,
+  SOA = 6,
+  PTR = 12,
+  MX = 15,
+  TXT = 16,
+  AAAA = 28,
+  ANY = 255,
 }
 
 local NUM_TYPE = {}
-for k, v in pairs(TYPE_NUM) do NUM_TYPE[v] = k end
+for k, v in pairs(TYPE_NUM) do
+  NUM_TYPE[v] = k
+end
 
 local RCODE_NAMES = {
-  [0] = "NOERROR", [1] = "FORMERR", [2] = "SERVFAIL",
-  [3] = "NXDOMAIN", [4] = "NOTIMP", [5] = "REFUSED",
+  [0] = "NOERROR",
+  [1] = "FORMERR",
+  [2] = "SERVFAIL",
+  [3] = "NXDOMAIN",
+  [4] = "NOTIMP",
+  [5] = "REFUSED",
 }
 
 local function u16_be(n)
@@ -41,9 +54,7 @@ end
 local function encode_name(name)
   local out = {}
   for label in (name:gsub("%.+$", "")):gmatch("[^.]+") do
-    if #label > 63 then
-      return nil, "label too long: " .. label
-    end
+    if #label > 63 then return nil, "label too long: " .. label end
     out[#out + 1] = string.char(#label) .. label
   end
   out[#out + 1] = "\0"
@@ -54,9 +65,8 @@ local function build_query(qid, name, qtype)
   local qname, err = encode_name(name)
   if not qname then return nil, err end
   -- Header: id, flags(RD=1=0x0100), qdcount=1, ancount=0, nscount=0, arcount=0
-  local header = u16_be(qid) .. u16_be(0x0100) ..
-    u16_be(1) .. u16_be(0) .. u16_be(0) .. u16_be(0)
-  local question = qname .. u16_be(qtype) .. u16_be(1)  -- class IN
+  local header = u16_be(qid) .. u16_be(0x0100) .. u16_be(1) .. u16_be(0) .. u16_be(0) .. u16_be(0)
+  local question = qname .. u16_be(qtype) .. u16_be(1) -- class IN
   return header .. question
 end
 
@@ -66,25 +76,21 @@ local function read_name(data, offset)
   local pos = offset
   local first_end = nil
   while true do
-    if seen[pos] then
-      return nil, "compression loop"
-    end
+    if seen[pos] then return nil, "compression loop" end
     seen[pos] = true
     local ln = data:byte(pos)
-    if not ln then
-      return nil, "truncated"
-    end
+    if not ln then return nil, "truncated" end
     if ln == 0 then
       pos = pos + 1
       first_end = first_end or pos
       return table.concat(labels, "."), first_end
     end
-    if ln >= 0xC0 then  -- pointer
+    if ln >= 0xC0 then -- pointer
       local b2 = data:byte(pos + 1)
       if not b2 then return nil, "truncated pointer" end
       local ptr = (ln - 0xC0) * 256 + b2
       first_end = first_end or (pos + 2)
-      pos = ptr + 1  -- offsets in DNS are 0-based; Lua strings are 1-based
+      pos = ptr + 1 -- offsets in DNS are 0-based; Lua strings are 1-based
     else
       labels[#labels + 1] = data:sub(pos + 1, pos + ln)
       pos = pos + 1 + ln
@@ -110,17 +116,17 @@ end
 local function format_rdata(rtype, rdata, full, offset)
   if rtype == 1 and #rdata == 4 then return format_ipv4(rdata) end
   if rtype == 28 and #rdata == 16 then return format_ipv6(rdata) end
-  if rtype == 2 or rtype == 5 or rtype == 12 then  -- NS, CNAME, PTR
+  if rtype == 2 or rtype == 5 or rtype == 12 then -- NS, CNAME, PTR
     local name = read_name(full, offset)
     return (name or "") .. "."
   end
-  if rtype == 15 then  -- MX: pref(2) + exchange
+  if rtype == 15 then -- MX: pref(2) + exchange
     if #rdata < 3 then return "" end
     local pref = read_u16(rdata, 1)
     local exch = read_name(full, offset + 2) or ""
     return string.format("%d %s.", pref, exch)
   end
-  if rtype == 16 then  -- TXT: length-prefixed strings
+  if rtype == 16 then -- TXT: length-prefixed strings
     local out = {}
     local i = 1
     while i <= #rdata do
@@ -131,19 +137,22 @@ local function format_rdata(rtype, rdata, full, offset)
     end
     return '"' .. table.concat(out, '" "') .. '"'
   end
-  if rtype == 6 then  -- SOA
+  if rtype == 6 then -- SOA
     local mname, p2 = read_name(full, offset)
     if not mname then return "" end
     local rname, p3 = read_name(full, p2)
     if not rname then return mname .. "." end
     if #full >= p3 + 19 then
-      local serial; serial, p3 = read_u32(full, p3)
-      local refresh; refresh, p3 = read_u32(full, p3)
-      local retry; retry, p3 = read_u32(full, p3)
-      local expire; expire, p3 = read_u32(full, p3)
+      local serial
+      serial, p3 = read_u32(full, p3)
+      local refresh
+      refresh, p3 = read_u32(full, p3)
+      local retry
+      retry, p3 = read_u32(full, p3)
+      local expire
+      expire, p3 = read_u32(full, p3)
       local minimum = read_u32(full, p3)
-      return string.format("%s. %s. %d %d %d %d %d",
-        mname, rname, serial, refresh, retry, expire, minimum)
+      return string.format("%s. %s. %d %d %d %d %d", mname, rname, serial, refresh, retry, expire, minimum)
     end
     return string.format("%s. %s.", mname, rname)
   end
@@ -163,12 +172,12 @@ local function parse_response(data)
   local qd = read_u16(data, 5)
   local an = read_u16(data, 7)
   local rcode = flags % 16
-  local pos = 13  -- past 12-byte header
+  local pos = 13 -- past 12-byte header
 
   for _ = 1, qd do
     local _, np = read_name(data, pos)
     if not np then return nil, "bad question section" end
-    pos = np + 4  -- skip qtype + qclass
+    pos = np + 4 -- skip qtype + qclass
   end
 
   local answers = {}
@@ -177,10 +186,13 @@ local function parse_response(data)
     if not name then return nil, "bad answer name" end
     pos = np
     if pos + 9 > #data then return nil, "answer truncated" end
-    local rtype; rtype, pos = read_u16(data, pos)
-    pos = pos + 2  -- skip rclass
-    local ttl; ttl, pos = read_u32(data, pos)
-    local rdlen; rdlen, pos = read_u16(data, pos)
+    local rtype
+    rtype, pos = read_u16(data, pos)
+    pos = pos + 2 -- skip rclass
+    local ttl
+    ttl, pos = read_u32(data, pos)
+    local rdlen
+    rdlen, pos = read_u16(data, pos)
     local rdata = data:sub(pos, pos + rdlen - 1)
     local value = format_rdata(rtype, rdata, data, pos)
     pos = pos + rdlen
@@ -202,9 +214,15 @@ local function do_query(server, name, qtype, timeout)
   if not sock then return nil, "udp open failed" end
   sock:settimeout(timeout)
   local ok, serr = sock:setpeername(server, 53)
-  if not ok then sock:close(); return nil, serr end
+  if not ok then
+    sock:close()
+    return nil, serr
+  end
   ok, serr = sock:send(query)
-  if not ok then sock:close(); return nil, serr end
+  if not ok then
+    sock:close()
+    return nil, serr
+  end
   local data, recv_err = sock:receive(4096)
   sock:close()
   if not data then return nil, recv_err end
@@ -221,12 +239,16 @@ local function arpa_for_ip(ip)
     local raw = table.concat(hex)
     if #raw ~= 32 then return nil end
     local nibbles = {}
-    for i = #raw, 1, -1 do nibbles[#nibbles + 1] = raw:sub(i, i) end
+    for i = #raw, 1, -1 do
+      nibbles[#nibbles + 1] = raw:sub(i, i)
+    end
     return table.concat(nibbles, ".") .. ".ip6.arpa"
   end
   -- IPv4: a.b.c.d -> d.c.b.a.in-addr.arpa
   local parts = {}
-  for p in ip:gmatch("[^.]+") do parts[#parts + 1] = p end
+  for p in ip:gmatch("[^.]+") do
+    parts[#parts + 1] = p
+  end
   if #parts ~= 4 then return nil end
   return parts[4] .. "." .. parts[3] .. "." .. parts[2] .. "." .. parts[1] .. ".in-addr.arpa"
 end
@@ -245,7 +267,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local server = nil
   local name = nil
@@ -257,9 +281,11 @@ local function main(argv)
   while i <= #args do
     local a = args[i]
     if a:sub(1, 1) == "@" then
-      server = a:sub(2); i = i + 1
+      server = a:sub(2)
+      i = i + 1
     elseif a == "+short" then
-      short = true; i = i + 1
+      short = true
+      i = i + 1
     elseif a == "-x" and args[i + 1] then
       local arpa = arpa_for_ip(args[i + 1])
       if not arpa then
@@ -347,8 +373,7 @@ local function main(argv)
     if #answers > 0 then
       io.stdout:write(";; ANSWER SECTION:\n")
       for _, ans in ipairs(answers) do
-        io.stdout:write(string.format("%s.\t%d\tIN\t%s\t%s\n",
-          ans.name, ans.ttl, ans.type, ans.value))
+        io.stdout:write(string.format("%s.\t%d\tIN\t%s\t%s\n", ans.name, ans.ttl, ans.type, ans.value))
       end
     else
       io.stdout:write(";; (no answer)\n")

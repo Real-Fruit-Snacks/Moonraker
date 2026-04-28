@@ -48,28 +48,25 @@ local function build_header(name, size, mode, mtime, typeflag, linkname)
   local fields = {
     string.sub(name, 1, 100) .. string.rep("\0", 100 - #string.sub(name, 1, 100)),
     octal(mode, 8),
-    octal(0, 8),    -- uid
-    octal(0, 8),    -- gid
+    octal(0, 8), -- uid
+    octal(0, 8), -- gid
     octal(size, 12),
     octal(mtime or os.time(), 12),
-    string.rep(" ", 8),  -- checksum placeholder (8 spaces)
+    string.rep(" ", 8), -- checksum placeholder (8 spaces)
     typeflag or "0",
-    string.sub(linkname or "", 1, 100) ..
-      string.rep("\0", 100 - #string.sub(linkname or "", 1, 100)),
+    string.sub(linkname or "", 1, 100) .. string.rep("\0", 100 - #string.sub(linkname or "", 1, 100)),
     "ustar\0",
     "00",
-    string.rep("\0", 32),  -- uname
-    string.rep("\0", 32),  -- gname
-    octal(0, 8),    -- devmajor
-    octal(0, 8),    -- devminor
-    string.rep("\0", 155),  -- prefix
-    string.rep("\0", 12),   -- pad
+    string.rep("\0", 32), -- uname
+    string.rep("\0", 32), -- gname
+    octal(0, 8), -- devmajor
+    octal(0, 8), -- devminor
+    string.rep("\0", 155), -- prefix
+    string.rep("\0", 12), -- pad
   }
   local header = table.concat(fields)
   -- pad to 512
-  if #header < BLOCK then
-    header = header .. string.rep("\0", BLOCK - #header)
-  end
+  if #header < BLOCK then header = header .. string.rep("\0", BLOCK - #header) end
   -- compute checksum
   local sum = compute_checksum(header)
   local cksum_field = string.format("%06o\0 ", sum)
@@ -97,9 +94,7 @@ local function parse_header(block)
   local typeflag = field(157, 1)
   local linkname = nullstrip(field(158, 100))
   local prefix = nullstrip(field(346, 155))
-  if prefix ~= "" then
-    name = prefix .. "/" .. name
-  end
+  if prefix ~= "" then name = prefix .. "/" .. name end
   return {
     name = name,
     mode = mode,
@@ -124,8 +119,14 @@ local function open_writer(path, compression)
     if not fh then return nil, err end
   end
   if compression == nil then
-    return { write = function(_, s) fh:write(s) end,
-             close = function() if path ~= "-" then fh:close() end end }
+    return {
+      write = function(_, s)
+        fh:write(s)
+      end,
+      close = function()
+        if path ~= "-" then fh:close() end
+      end,
+    }
   end
   if compression == "gz" then
     local d = zlib.deflate(zlib.DEFAULT_COMPRESSION, GZIP_BITS)
@@ -153,7 +154,9 @@ local function open_writer(path, compression)
     -- we can extend lua_bzip2.c with a streaming API.
     local buf = {}
     return {
-      write = function(_, s) buf[#buf + 1] = s end,
+      write = function(_, s)
+        buf[#buf + 1] = s
+      end,
       close = function()
         local plain = table.concat(buf)
         local ok, compressed = pcall(bzip2.compress, plain, 9)
@@ -199,9 +202,7 @@ end
 
 local function fnmatch_any(name, patterns)
   for _, p in ipairs(patterns) do
-    if common.fnmatch(p, common.basename(name)) or common.fnmatch(p, name) then
-      return true
-    end
+    if common.fnmatch(p, common.basename(name)) or common.fnmatch(p, name) then return true end
   end
   return false
 end
@@ -221,16 +222,19 @@ local function add_entry(writer, abs_path, arc_name, lfs, excludes, verbose)
   if verbose then io.stderr:write(arc_name, "\n") end
 
   if attr.mode == "directory" then
-    local header = build_header(arc_name .. "/", 0,
+    local header = build_header(
+      arc_name .. "/",
+      0,
       tonumber(attr.permissions and string.format("%o", 0) or "755", 8) or 493,
-      math.floor(attr.modification or os.time()), "5", "")
+      math.floor(attr.modification or os.time()),
+      "5",
+      ""
+    )
     writer:write(header)
     -- Recurse
     local entries = {}
     for entry in lfs.dir(abs_path) do
-      if entry ~= "." and entry ~= ".." then
-        entries[#entries + 1] = entry
-      end
+      if entry ~= "." and entry ~= ".." then entries[#entries + 1] = entry end
     end
     table.sort(entries)
     for _, entry in ipairs(entries) do
@@ -240,8 +244,14 @@ local function add_entry(writer, abs_path, arc_name, lfs, excludes, verbose)
   elseif attr.mode == "file" then
     local data, derr = read_file_bytes(abs_path)
     if not data then return false, derr end
-    local header = build_header(arc_name, #data, 420, -- mode 0o644
-      math.floor(attr.modification or os.time()), "0", "")
+    local header = build_header(
+      arc_name,
+      #data,
+      420, -- mode 0o644
+      math.floor(attr.modification or os.time()),
+      "0",
+      ""
+    )
     writer:write(header)
     writer:write(data)
     -- Pad to 512
@@ -371,9 +381,9 @@ local function op_list(archive, verbose, compression)
       return 1
     end
     if verbose then
-      io.stdout:write(string.format("%-10s %10d %s\n",
-        h.typeflag == "5" and "drwxr-xr-x" or "-rw-r--r--",
-        h.size, h.name))
+      io.stdout:write(
+        string.format("%-10s %10d %s\n", h.typeflag == "5" and "drwxr-xr-x" or "-rw-r--r--", h.size, h.name)
+      )
     else
       io.stdout:write(h.name, "\n")
     end
@@ -391,9 +401,7 @@ local function expand_bundled(args)
   local first = args[1]
   if first:sub(1, 2) == "--" or first == "-" then return args end
   local bundled = first:sub(1, 1) == "-" and first:sub(2) or first
-  if bundled == "" or not bundled:match("^[cxtrvzjJfkpaoC]+$") then
-    return args
-  end
+  if bundled == "" or not bundled:match("^[cxtrvzjJfkpaoC]+$") then return args end
   local value_taking = "fC"
   local need = 0
   for ch in bundled:gmatch(".") do
@@ -401,9 +409,13 @@ local function expand_bundled(args)
   end
   if #args < 1 + need then return args end
   local values = {}
-  for k = 2, 1 + need do values[#values + 1] = args[k] end
+  for k = 2, 1 + need do
+    values[#values + 1] = args[k]
+  end
   local rest = {}
-  for k = 2 + need, #args do rest[#rest + 1] = args[k] end
+  for k = 2 + need, #args do
+    rest[#rest + 1] = args[k]
+  end
   local out = {}
   local v_idx = 1
   for ch in bundled:gmatch(".") do
@@ -413,49 +425,83 @@ local function expand_bundled(args)
       v_idx = v_idx + 1
     end
   end
-  for _, r in ipairs(rest) do out[#out + 1] = r end
+  for _, r in ipairs(rest) do
+    out[#out + 1] = r
+  end
   return out
 end
 
 local function main(argv)
   local raw = {}
-  for i = 1, #argv do raw[i] = argv[i] end
+  for i = 1, #argv do
+    raw[i] = argv[i]
+  end
   local args = expand_bundled(raw)
 
   local op, archive = nil, nil
   local verbose = false
-  local compression = nil  -- nil | "gz" | "bz2"
+  local compression = nil -- nil | "gz" | "bz2"
   local change_dir = nil
   local excludes = {}
 
   local i = 1
   while i <= #args do
     local a = args[i]
-    if a == "--" then i = i + 1; break end
-    if a == "-c" or a == "--create" then op = "c"; i = i + 1
-    elseif a == "-x" or a == "--extract" then op = "x"; i = i + 1
-    elseif a == "-t" or a == "--list" then op = "t"; i = i + 1
-    elseif a == "-v" or a == "--verbose" then verbose = true; i = i + 1
-    elseif a == "-z" or a == "--gzip" then compression = "gz"; i = i + 1
-    elseif a == "-j" or a == "--bzip2" then compression = "bz2"; i = i + 1
+    if a == "--" then
+      i = i + 1
+      break
+    end
+    if a == "-c" or a == "--create" then
+      op = "c"
+      i = i + 1
+    elseif a == "-x" or a == "--extract" then
+      op = "x"
+      i = i + 1
+    elseif a == "-t" or a == "--list" then
+      op = "t"
+      i = i + 1
+    elseif a == "-v" or a == "--verbose" then
+      verbose = true
+      i = i + 1
+    elseif a == "-z" or a == "--gzip" then
+      compression = "gz"
+      i = i + 1
+    elseif a == "-j" or a == "--bzip2" then
+      compression = "bz2"
+      i = i + 1
     elseif a == "-J" or a == "--xz" then
       common.err(NAME, "xz not supported in this build")
       return 2
     elseif a == "-f" then
-      if i + 1 > #args then common.err(NAME, "-f: missing argument"); return 2 end
-      archive = args[i + 1]; i = i + 2
+      if i + 1 > #args then
+        common.err(NAME, "-f: missing argument")
+        return 2
+      end
+      archive = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 7) == "--file=" then
-      archive = a:sub(8); i = i + 1
+      archive = a:sub(8)
+      i = i + 1
     elseif a == "-C" then
-      if i + 1 > #args then common.err(NAME, "-C: missing argument"); return 2 end
-      change_dir = args[i + 1]; i = i + 2
+      if i + 1 > #args then
+        common.err(NAME, "-C: missing argument")
+        return 2
+      end
+      change_dir = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 12) == "--directory=" then
-      change_dir = a:sub(13); i = i + 1
+      change_dir = a:sub(13)
+      i = i + 1
     elseif a == "--exclude" then
-      if i + 1 > #args then common.err(NAME, "--exclude: missing argument"); return 2 end
-      excludes[#excludes + 1] = args[i + 1]; i = i + 2
+      if i + 1 > #args then
+        common.err(NAME, "--exclude: missing argument")
+        return 2
+      end
+      excludes[#excludes + 1] = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 10) == "--exclude=" then
-      excludes[#excludes + 1] = a:sub(11); i = i + 1
+      excludes[#excludes + 1] = a:sub(11)
+      i = i + 1
     elseif a:sub(1, 1) == "-" and a ~= "-" then
       common.err(NAME, "invalid option: " .. a)
       return 2
@@ -474,14 +520,15 @@ local function main(argv)
   end
 
   local paths = {}
-  for j = i, #args do paths[#paths + 1] = args[j] end
+  for j = i, #args do
+    paths[#paths + 1] = args[j]
+  end
 
   -- Auto-detect compression from extension when reading
   if (op == "x" or op == "t") and not compression then
     if archive:sub(-3) == ".gz" or archive:sub(-4) == ".tgz" then
       compression = "gz"
-    elseif archive:sub(-4) == ".bz2" or archive:sub(-5) == ".tbz2"
-      or archive:sub(-4) == ".tbz" then
+    elseif archive:sub(-4) == ".bz2" or archive:sub(-5) == ".tbz2" or archive:sub(-4) == ".tbz" then
       compression = "bz2"
     end
   end

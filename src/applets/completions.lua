@@ -99,7 +99,9 @@ local GENERATORS = {
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   if #args == 0 then
     common.err(NAME, "shell required: bash, zsh, fish, or powershell")

@@ -8,17 +8,13 @@ local NAME = "whoami"
 --- USERNAME, then `whoami` / `id -un` subprocesses.
 local function get_user()
   local env = os.getenv("USER") or os.getenv("LOGNAME") or os.getenv("USERNAME")
-  if env and env ~= "" then
-    return env
-  end
+  if env and env ~= "" then return env end
   local cmd = common.is_windows() and "echo %USERNAME%" or "id -un 2>/dev/null"
   local p = io.popen(cmd)
   if p then
     local line = p:read("*l")
     p:close()
-    if line and line ~= "" then
-      return (line:gsub("[\r\n]+$", ""))
-    end
+    if line and line ~= "" then return (line:gsub("[\r\n]+$", "")) end
   end
   return nil
 end

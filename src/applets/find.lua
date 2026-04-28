@@ -26,7 +26,8 @@ local function and_node(a, b)
         return self.left:eval(p, attr, ctx) and self.right:eval(p, attr, ctx)
       end,
       finalize = function(self, ctx)
-        self.left:finalize(ctx); self.right:finalize(ctx)
+        self.left:finalize(ctx)
+        self.right:finalize(ctx)
       end,
     },
   })
@@ -39,7 +40,8 @@ local function or_node(a, b)
         return self.left:eval(p, attr, ctx) or self.right:eval(p, attr, ctx)
       end,
       finalize = function(self, ctx)
-        self.left:finalize(ctx); self.right:finalize(ctx)
+        self.left:finalize(ctx)
+        self.right:finalize(ctx)
       end,
     },
   })
@@ -48,15 +50,24 @@ end
 local function not_node(inner)
   return setmetatable({ inner = inner, type = "not" }, {
     __index = {
-      eval = function(self, p, attr, ctx) return not self.inner:eval(p, attr, ctx) end,
-      finalize = function(self, ctx) self.inner:finalize(ctx) end,
+      eval = function(self, p, attr, ctx)
+        return not self.inner:eval(p, attr, ctx)
+      end,
+      finalize = function(self, ctx)
+        self.inner:finalize(ctx)
+      end,
     },
   })
 end
 
 local function true_node()
   return setmetatable({ type = "true" }, {
-    __index = { eval = function() return true end, finalize = function() end },
+    __index = {
+      eval = function()
+        return true
+      end,
+      finalize = function() end,
+    },
   })
 end
 
@@ -67,9 +78,7 @@ local function name_test(pat, ci)
     __index = {
       eval = function(_, p, _attr, _ctx)
         local n = common.basename(p)
-        if ci then
-          return common.fnmatch(pat:lower(), n:lower())
-        end
+        if ci then return common.fnmatch(pat:lower(), n:lower()) end
         return common.fnmatch(pat, n)
       end,
       finalize = function() end,
@@ -81,9 +90,7 @@ local function path_test(pat, ci)
   return setmetatable({}, {
     __index = {
       eval = function(_, p)
-        if ci then
-          return common.fnmatch(pat:lower(), p:lower())
-        end
+        if ci then return common.fnmatch(pat:lower(), p:lower()) end
         return common.fnmatch(pat, p)
       end,
       finalize = function() end,
@@ -127,8 +134,10 @@ local function time_test(which, unit, cmp_, n)
       eval = function(_, _p, attr, ctx)
         if not attr then return false end
         local t = attr.modification
-        if which == "a" then t = attr.access
-        elseif which == "c" then t = attr.change
+        if which == "a" then
+          t = attr.access
+        elseif which == "c" then
+          t = attr.change
         end
         local diff = ctx.now - (t or 0)
         local divisor = unit == "day" and 86400 or 60
@@ -206,7 +215,10 @@ end
 local function prune_action()
   return setmetatable({}, {
     __index = {
-      eval = function(_, _p, _attr, ctx) ctx.pruned = true; return true end,
+      eval = function(_, _p, _attr, ctx)
+        ctx.pruned = true
+        return true
+      end,
       finalize = function() end,
     },
   })
@@ -220,14 +232,18 @@ local function exec_action(cmd, mode)
     local placeholder = false
     for _, tok in ipairs(self.cmd) do
       if tok == "{}" then
-        for _, x in ipairs(self.batch) do argv[#argv + 1] = x end
+        for _, x in ipairs(self.batch) do
+          argv[#argv + 1] = x
+        end
         placeholder = true
       else
         argv[#argv + 1] = tok
       end
     end
     if not placeholder then
-      for _, x in ipairs(self.batch) do argv[#argv + 1] = x end
+      for _, x in ipairs(self.batch) do
+        argv[#argv + 1] = x
+      end
     end
     -- shell-quote each arg
     local parts = {}
@@ -256,7 +272,9 @@ local function exec_action(cmd, mode)
         if #s.batch >= 1000 then flush() end
         return true
       end,
-      finalize = function(s) if s.mode == "+" then flush() end end,
+      finalize = function(s)
+        if s.mode == "+" then flush() end
+      end,
     },
   })
 end
@@ -270,20 +288,22 @@ function Parser.new(tokens)
   return setmetatable({ toks = tokens, i = 1, has_action = false }, Parser)
 end
 
-function Parser:peek() return self.toks[self.i] end
+function Parser:peek()
+  return self.toks[self.i]
+end
 function Parser:consume()
   local t = self.toks[self.i]
   self.i = self.i + 1
   return t
 end
 function Parser:expect(tok)
-  if self:peek() ~= tok then
-    error("expected '" .. tok .. "', got '" .. tostring(self:peek()) .. "'")
-  end
+  if self:peek() ~= tok then error("expected '" .. tok .. "', got '" .. tostring(self:peek()) .. "'") end
   self:consume()
 end
 
-function Parser:parse_expr() return self:parse_or() end
+function Parser:parse_expr()
+  return self:parse_or()
+end
 
 function Parser:parse_or()
   local left = self:parse_and()
@@ -319,9 +339,7 @@ function Parser:parse_not()
 end
 
 function Parser:need_arg(flag)
-  if self:peek() == nil then
-    error(flag .. ": missing argument")
-  end
+  if self:peek() == nil then error(flag .. ": missing argument") end
   return self:consume()
 end
 
@@ -337,8 +355,7 @@ function Parser:parse_size_value()
   if not digits then error("-size: invalid value") end
   local n = tonumber(digits)
   local suffix = v:sub(#digits + 1)
-  local units = { [""] = 512, b = 512, c = 1, w = 2, k = 1024,
-    M = 1024 * 1024, G = 1024 * 1024 * 1024 }
+  local units = { [""] = 512, b = 512, c = 1, w = 2, k = 1024, M = 1024 * 1024, G = 1024 * 1024 * 1024 }
   local unit = units[suffix]
   if not unit then error("-size: unknown unit '" .. suffix .. "'") end
   return size_test(cmp_, n, unit)
@@ -362,13 +379,9 @@ end
 function Parser:parse_exec()
   local cmd = {}
   while true do
-    if self:peek() == nil then
-      error("-exec: unterminated (expected ';' or '+')")
-    end
+    if self:peek() == nil then error("-exec: unterminated (expected ';' or '+')") end
     local t = self:consume()
-    if t == ";" or t == "+" then
-      return exec_action(cmd, t)
-    end
+    if t == ";" or t == "+" then return exec_action(cmd, t) end
     cmd[#cmd + 1] = t
   end
 end
@@ -387,32 +400,39 @@ function Parser:parse_primary()
   if tok == "-ipath" then return path_test(self:need_arg(tok), true) end
   if tok == "-type" then
     local v = self:need_arg(tok)
-    if v ~= "f" and v ~= "d" and v ~= "l" then
-      error("-type: unsupported type '" .. v .. "'")
-    end
+    if v ~= "f" and v ~= "d" and v ~= "l" then error("-type: unsupported type '" .. v .. "'") end
     return type_test(v)
   end
   if tok == "-size" then return self:parse_size_value() end
-  if tok == "-mtime" or tok == "-mmin" or tok == "-atime"
-     or tok == "-amin" or tok == "-ctime" or tok == "-cmin" then
+  if tok == "-mtime" or tok == "-mmin" or tok == "-atime" or tok == "-amin" or tok == "-ctime" or tok == "-cmin" then
     return self:parse_time_value(tok)
   end
   if tok == "-newer" then
     local ref = self:need_arg(tok)
     local lfs = common.try_lfs()
     local attr = lfs and lfs.attributes(ref)
-    if not attr then
-      error("-newer: " .. ref .. ": No such file or directory")
-    end
+    if not attr then error("-newer: " .. ref .. ": No such file or directory") end
     return newer_test(attr.modification or 0)
   end
   if tok == "-empty" then return empty_test() end
   if tok == "-true" then return true_node() end
-  if tok == "-print" then self.has_action = true; return print_action(false) end
-  if tok == "-print0" then self.has_action = true; return print_action(true) end
-  if tok == "-delete" then self.has_action = true; return delete_action() end
+  if tok == "-print" then
+    self.has_action = true
+    return print_action(false)
+  end
+  if tok == "-print0" then
+    self.has_action = true
+    return print_action(true)
+  end
+  if tok == "-delete" then
+    self.has_action = true
+    return delete_action()
+  end
   if tok == "-prune" then return prune_action() end
-  if tok == "-exec" then self.has_action = true; return self:parse_exec() end
+  if tok == "-exec" then
+    self.has_action = true
+    return self:parse_exec()
+  end
   error("unknown predicate: '" .. tostring(tok) .. "'")
 end
 
@@ -462,7 +482,9 @@ local function walk_tree(root, expr, mindepth, maxdepth, ctx)
     end
     ctx.pruned = false
     if depth >= mindepth and (maxdepth < 0 or depth <= maxdepth) then
-      local ok, err = pcall(function() expr:eval(p, attr, ctx) end)
+      local ok, err = pcall(function()
+        expr:eval(p, attr, ctx)
+      end)
       if not ok then
         common.err(NAME, tostring(err))
         rc = 1
@@ -474,9 +496,7 @@ local function walk_tree(root, expr, mindepth, maxdepth, ctx)
     local entries = {}
     local ok = pcall(function()
       for entry in lfs.dir(p) do
-        if entry ~= "." and entry ~= ".." then
-          entries[#entries + 1] = entry
-        end
+        if entry ~= "." and entry ~= ".." then entries[#entries + 1] = entry end
       end
     end)
     if not ok then
@@ -504,9 +524,7 @@ local function main(argv)
   local i = 1
   while i <= #args do
     local a = args[i]
-    if a:sub(1, 1) == "-" or a == "(" or a == ")" or a == "!" then
-      break
-    end
+    if a:sub(1, 1) == "-" or a == "(" or a == ")" or a == "!" then break end
     paths[#paths + 1] = a
     i = i + 1
   end
@@ -514,9 +532,7 @@ local function main(argv)
   for j = i, #args do
     expr_tokens[#expr_tokens + 1] = args[j]
   end
-  if #paths == 0 then
-    paths = { "." }
-  end
+  if #paths == 0 then paths = { "." } end
 
   local tokens, mindepth, maxdepth = extract_globals(expr_tokens)
   if not tokens then return 2 end
@@ -526,7 +542,9 @@ local function main(argv)
   if #tokens == 0 then
     expr = true_node()
   else
-    local ok, result = pcall(function() return parser:parse_expr() end)
+    local ok, result = pcall(function()
+      return parser:parse_expr()
+    end)
     if not ok then
       common.err(NAME, tostring(result))
       return 2
@@ -537,9 +555,7 @@ local function main(argv)
     common.err(NAME, "unexpected token: '" .. tostring(tokens[parser.i]) .. "'")
     return 2
   end
-  if not parser.has_action then
-    expr = and_node(expr, print_action(false))
-  end
+  if not parser.has_action then expr = and_node(expr, print_action(false)) end
 
   local ctx = new_ctx()
   local rc = 0

@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("getopt applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("-T returns 4 (enhanced getopt available)", function()
     local rc = helpers.invoke_multicall("getopt", "-T")

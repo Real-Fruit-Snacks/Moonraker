@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("uname applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("default prints kernel name", function()
     local rc, out = helpers.invoke_multicall("uname")

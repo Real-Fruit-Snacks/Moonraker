@@ -15,15 +15,16 @@ local function parse_date(s)
     s = s:sub(1, -2)
     utc = true
   end
-  local y, mo, d, h, mi, se =
-    s:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)[Tt ]?(%d?%d?):?(%d?%d?):?(%d?%d?)$")
+  local y, mo, d, h, mi, se = s:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)[Tt ]?(%d?%d?):?(%d?%d?):?(%d?%d?)$")
   if not y then
     y, mo, d = s:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)$")
     if not y then return nil end
     h, mi, se = "0", "0", "0"
   end
   local t = {
-    year = tonumber(y), month = tonumber(mo), day = tonumber(d),
+    year = tonumber(y),
+    month = tonumber(mo),
+    day = tonumber(d),
     hour = tonumber(h ~= "" and h or 0),
     min = tonumber(mi ~= "" and mi or 0),
     sec = tonumber(se ~= "" and se or 0),
@@ -35,7 +36,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local utc = false
   local d_arg, r_arg, fmt, iso_spec = nil, nil, nil, nil
@@ -46,26 +49,34 @@ local function main(argv)
     local a = args[i]
     if a == "--" then break end
     if a == "-u" or a == "--utc" or a == "--universal" then
-      utc = true; i = i + 1
+      utc = true
+      i = i + 1
     elseif a == "-d" or a == "--date" then
       if i + 1 > #args then
         common.err(NAME, a .. ": missing argument")
         return 2
       end
-      d_arg = args[i + 1]; i = i + 2
+      d_arg = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 7) == "--date=" then
-      d_arg = a:sub(8); i = i + 1
+      d_arg = a:sub(8)
+      i = i + 1
     elseif a == "-r" then
       if i + 1 > #args then
         common.err(NAME, "-r: missing argument")
         return 2
       end
-      r_arg = args[i + 1]; i = i + 2
+      r_arg = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 12) == "--reference=" then
-      r_arg = a:sub(13); i = i + 1
+      r_arg = a:sub(13)
+      i = i + 1
     elseif a == "-R" or a == "--rfc-2822" or a == "--rfc-email" then
-      rfc_2822 = true; i = i + 1
-    elseif a == "-I" then iso_spec = "date"; i = i + 1
+      rfc_2822 = true
+      i = i + 1
+    elseif a == "-I" then
+      iso_spec = "date"
+      i = i + 1
     elseif a:sub(1, 2) == "-I" then
       local spec = a:sub(3)
       local valid = { date = true, hours = true, minutes = true, seconds = true, ns = true }
@@ -73,7 +84,8 @@ local function main(argv)
         common.err(NAME, "invalid --iso-8601 arg: " .. spec)
         return 2
       end
-      iso_spec = spec; i = i + 1
+      iso_spec = spec
+      i = i + 1
     elseif a:sub(1, 10) == "--iso-8601" then
       local spec = "date"
       if a:find("=", 1, true) then spec = a:sub(a:find("=", 1, true) + 1) end
@@ -82,9 +94,11 @@ local function main(argv)
         common.err(NAME, "invalid --iso-8601 arg: " .. spec)
         return 2
       end
-      iso_spec = spec; i = i + 1
+      iso_spec = spec
+      i = i + 1
     elseif a:sub(1, 1) == "+" then
-      fmt = a:sub(2); i = i + 1
+      fmt = a:sub(2)
+      i = i + 1
     elseif a:sub(1, 1) == "-" then
       common.err(NAME, "invalid option: " .. a)
       return 2

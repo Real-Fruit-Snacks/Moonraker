@@ -30,9 +30,7 @@ local function decompress_stream(input_fh, output_fh)
     local data = input_fh:read(CHUNK)
     if not data or data == "" then break end
     local ok, out = pcall(i, data)
-    if not ok then
-      return false, tostring(out)
-    end
+    if not ok then return false, tostring(out) end
     if out and out ~= "" then output_fh:write(out) end
   end
   return true
@@ -154,7 +152,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local decompress, to_stdout = false, false
   local keep, force, test_only = false, false, false
@@ -170,13 +170,15 @@ local function main(argv)
     if a == "-d" or a == "--decompress" or a == "--uncompress" then
       decompress = true
     elseif a == "-c" or a == "--stdout" or a == "--to-stdout" then
-      to_stdout = true; keep = true
+      to_stdout = true
+      keep = true
     elseif a == "-k" or a == "--keep" then
       keep = true
     elseif a == "-f" or a == "--force" then
       force = true
     elseif a == "-t" or a == "--test" then
-      test_only = true; decompress = true
+      test_only = true
+      decompress = true
     elseif a == "-q" or a == "--quiet" or a == "-v" or a == "--verbose" then
       level = level -- no-op
     elseif a:match("^%-[1-9]$") then
@@ -191,7 +193,9 @@ local function main(argv)
   end
 
   local files = {}
-  for j = i, #args do files[#files + 1] = args[j] end
+  for j = i, #args do
+    files[#files + 1] = args[j]
+  end
 
   -- stdin -> stdout when no files
   if #files == 0 or (#files == 1 and files[1] == "-") then

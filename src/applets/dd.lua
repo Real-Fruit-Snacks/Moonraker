@@ -5,8 +5,11 @@ local common = require("common")
 local NAME = "dd"
 
 local SIZE_MULT_2 = {
-  K = 1024, M = 1024 * 1024, G = 1024 * 1024 * 1024,
-  T = 1024 * 1024 * 1024 * 1024, P = 1024 * 1024 * 1024 * 1024 * 1024,
+  K = 1024,
+  M = 1024 * 1024,
+  G = 1024 * 1024 * 1024,
+  T = 1024 * 1024 * 1024 * 1024,
+  P = 1024 * 1024 * 1024 * 1024 * 1024,
 }
 local SIZE_MULT_10 = { k = 1000, m = 1000000, g = 1000000000 }
 
@@ -46,9 +49,7 @@ local function convert(buf, conv)
       out[#out + 1] = buf:sub(i, i)
       i = i + 2
     end
-    if i <= #buf then
-      out[#out + 1] = buf:sub(i, i)
-    end
+    if i <= #buf then out[#out + 1] = buf:sub(i, i) end
     buf = table.concat(out)
   end
   return buf
@@ -73,8 +74,10 @@ local function main(argv)
       common.err(NAME, "bad operand: " .. a)
       return 2
     end
-    if k == "if" then in_path = v
-    elseif k == "of" then out_path = v
+    if k == "if" then
+      in_path = v
+    elseif k == "of" then
+      out_path = v
     elseif k == "bs" then
       local n = parse_size(v)
       if not n or n <= 0 then
@@ -119,10 +122,18 @@ local function main(argv)
       seek = n
     elseif k == "conv" then
       for piece in v:gmatch("[^,]+") do
-        if piece == "notrunc" or piece == "noerror" or piece == "sync"
-           or piece == "fdatasync" or piece == "fsync" or piece == "lcase"
-           or piece == "ucase" or piece == "swab" or piece == "excl"
-           or piece == "nocreat" then
+        if
+          piece == "notrunc"
+          or piece == "noerror"
+          or piece == "sync"
+          or piece == "fdatasync"
+          or piece == "fsync"
+          or piece == "lcase"
+          or piece == "ucase"
+          or piece == "swab"
+          or piece == "excl"
+          or piece == "nocreat"
+        then
           conv[piece] = true
         else
           common.err(NAME, "unknown conv: " .. piece)
@@ -153,9 +164,7 @@ local function main(argv)
   if out_path then
     local mode = conv.notrunc and "r+b" or "wb"
     out_fh = io.open(out_path, mode)
-    if not out_fh and not conv.notrunc then
-      out_fh = io.open(out_path, "wb")
-    end
+    if not out_fh and not conv.notrunc then out_fh = io.open(out_path, "wb") end
     if not out_fh then
       common.err_path(NAME, out_path, "could not open for writing")
       if in_path then in_fh:close() end
@@ -174,9 +183,7 @@ local function main(argv)
       remaining = remaining - #chunk
     end
   end
-  if seek > 0 and out_path then
-    out_fh:seek("set", seek * out_bs)
-  end
+  if seek > 0 and out_path then out_fh:seek("set", seek * out_bs) end
 
   local records_in_full, records_in_part = 0, 0
   local records_out_full, records_out_part = 0, 0
@@ -191,9 +198,7 @@ local function main(argv)
       records_in_full = records_in_full + 1
     else
       records_in_part = records_in_part + 1
-      if conv.sync then
-        buf = buf .. string.rep("\0", in_bs - #buf)
-      end
+      if conv.sync then buf = buf .. string.rep("\0", in_bs - #buf) end
     end
     buf = convert(buf, conv)
     out_fh:write(buf)
@@ -217,8 +222,7 @@ local function main(argv)
     if status_mode ~= "noxfer" then
       local elapsed = os.clock() - start
       local rate = elapsed > 0 and (bytes_total / elapsed) or 0
-      io.stderr:write(string.format("%d bytes copied, %.4g s, %.3g B/s\n",
-        bytes_total, elapsed, rate))
+      io.stderr:write(string.format("%d bytes copied, %.4g s, %.3g B/s\n", bytes_total, elapsed, rate))
     end
   end
 

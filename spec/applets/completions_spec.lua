@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("completions applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("requires a shell argument", function()
     local rc = helpers.invoke_multicall("completions")

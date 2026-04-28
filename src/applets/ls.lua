@@ -10,9 +10,7 @@ local function classify(attr)
   if attr.mode == "link" then return "@" end
   if attr.mode == "named pipe" then return "|" end
   if attr.mode == "socket" then return "=" end
-  if attr.mode == "file" and attr.permissions and attr.permissions:find("x") then
-    return "*"
-  end
+  if attr.mode == "file" and attr.permissions and attr.permissions:find("x") then return "*" end
   return ""
 end
 
@@ -20,12 +18,18 @@ local function filemode(attr)
   if not attr then return "?????????" end
   local type_char = "-"
   local m = attr.mode
-  if m == "directory" then type_char = "d"
-  elseif m == "link" then type_char = "l"
-  elseif m == "named pipe" then type_char = "p"
-  elseif m == "socket" then type_char = "s"
-  elseif m == "char device" then type_char = "c"
-  elseif m == "block device" then type_char = "b"
+  if m == "directory" then
+    type_char = "d"
+  elseif m == "link" then
+    type_char = "l"
+  elseif m == "named pipe" then
+    type_char = "p"
+  elseif m == "socket" then
+    type_char = "s"
+  elseif m == "char device" then
+    type_char = "c"
+  elseif m == "block device" then
+    type_char = "b"
   end
   return type_char .. (attr.permissions or "?????????")
 end
@@ -44,8 +48,7 @@ local function format_long(name, attr)
   else
     ts = os.date("%b %d %H:%M", mtime)
   end
-  return string.format("%s %2d %s %s %8d %s %s",
-    mode, nlink, tostring(uid), tostring(gid), size, ts, name)
+  return string.format("%s %2d %s %s %8d %s %s", mode, nlink, tostring(uid), tostring(gid), size, ts, name)
 end
 
 local function format_columns(names, term_width)
@@ -93,22 +96,33 @@ local function main(argv)
   while i <= #args do
     local a = args[i]
     if a == "--" then
-      for j = i + 1, #args do paths[#paths + 1] = args[j] end
+      for j = i + 1, #args do
+        paths[#paths + 1] = args[j]
+      end
       break
     end
     if a == "-" or a:sub(1, 1) ~= "-" or #a < 2 then
       paths[#paths + 1] = a
     else
       for ch in a:sub(2):gmatch(".") do
-        if ch == "l" then long_fmt = true
-        elseif ch == "a" then show_all = true
-        elseif ch == "A" then show_almost_all = true
-        elseif ch == "1" then one_per_line = true
-        elseif ch == "R" then recursive = true
-        elseif ch == "F" then do_classify = true
-        elseif ch == "S" then sort_size = true
-        elseif ch == "t" then sort_time = true
-        elseif ch == "r" then reverse = true
+        if ch == "l" then
+          long_fmt = true
+        elseif ch == "a" then
+          show_all = true
+        elseif ch == "A" then
+          show_almost_all = true
+        elseif ch == "1" then
+          one_per_line = true
+        elseif ch == "R" then
+          recursive = true
+        elseif ch == "F" then
+          do_classify = true
+        elseif ch == "S" then
+          sort_size = true
+        elseif ch == "t" then
+          sort_time = true
+        elseif ch == "r" then
+          reverse = true
         else
           common.err(NAME, "invalid option: -" .. ch)
           return 2
@@ -118,9 +132,7 @@ local function main(argv)
     i = i + 1
   end
 
-  if #paths == 0 then
-    paths = { "." }
-  end
+  if #paths == 0 then paths = { "." } end
 
   local term_width = tonumber(os.getenv("COLUMNS") or "") or 80
   local lfs = common.try_lfs()
@@ -133,9 +145,7 @@ local function main(argv)
   local need_stat = long_fmt or do_classify or sort_size or sort_time
 
   local function list_one(root, header)
-    if header then
-      io.stdout:write(root, ":\n")
-    end
+    if header then io.stdout:write(root, ":\n") end
     local root_attr = lfs.symlinkattributes(root)
     if not root_attr then
       common.err_path(NAME, root, "No such file or directory")
@@ -199,7 +209,9 @@ local function main(argv)
     end
     if reverse then
       local rev = {}
-      for k = #entries, 1, -1 do rev[#rev + 1] = entries[k] end
+      for k = #entries, 1, -1 do
+        rev[#rev + 1] = entries[k]
+      end
       entries = rev
     end
 
@@ -237,9 +249,7 @@ local function main(argv)
 
   local multi = #paths > 1 or recursive
   for idx, p in ipairs(paths) do
-    if multi and idx > 1 then
-      io.stdout:write("\n")
-    end
+    if multi and idx > 1 then io.stdout:write("\n") end
     list_one(p, multi)
   end
   return rc

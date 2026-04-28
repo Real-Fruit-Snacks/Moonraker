@@ -14,9 +14,7 @@ local METHOD_STORE = zip._internal.METHOD_STORE
 local METHOD_DEFLATE = zip._internal.METHOD_DEFLATE
 
 local function decompress(entry)
-  if entry.method == METHOD_STORE then
-    return entry.payload
-  end
+  if entry.method == METHOD_STORE then return entry.payload end
   if entry.method == METHOD_DEFLATE then
     local out, err = inflate_bytes(entry.payload)
     if not out then return nil, err end
@@ -43,7 +41,9 @@ local function ensure_parent_dir(path)
   if lfs.attributes(dir) then return true end
   local sep = common.path_sep()
   local parts = {}
-  for p in dir:gmatch("[^/\\]+") do parts[#parts + 1] = p end
+  for p in dir:gmatch("[^/\\]+") do
+    parts[#parts + 1] = p
+  end
   local cur = dir:sub(1, 1) == "/" and "/" or ""
   for _, p in ipairs(parts) do
     cur = (cur == "" or cur == "/") and (cur .. p) or (cur .. sep .. p)
@@ -62,18 +62,18 @@ end
 local function safe_path(dest, name)
   -- Prevent path-escape via ../../ payloads. Reject names that, when
   -- joined with dest and resolved, fall outside dest.
-  if name:find("%.%.[/\\]") or name:sub(1, 3) == "../" or name:sub(1, 3) == "..\\" then
-    return nil
-  end
+  if name:find("%.%.[/\\]") or name:sub(1, 3) == "../" or name:sub(1, 3) == "..\\" then return nil end
   if name:sub(1, 1) == "/" or name:sub(1, 1) == "\\" or name:match("^[A-Za-z]:") then
-    return nil  -- absolute path, refuse
+    return nil -- absolute path, refuse
   end
   return common.path_join(dest, name)
 end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local dest = "."
   local list_only = false
@@ -92,12 +92,23 @@ local function main(argv)
         common.err(NAME, "-d: missing argument")
         return 2
       end
-      dest = args[i + 1]; i = i + 2
-    elseif a == "-l" then list_only = true; i = i + 1
-    elseif a == "-o" then overwrite = true; i = i + 1
-    elseif a == "-n" then overwrite = false; i = i + 1
-    elseif a == "-p" then pipe_mode = true; i = i + 1
-    elseif a == "-q" or a == "-qq" then quiet = true; i = i + 1
+      dest = args[i + 1]
+      i = i + 2
+    elseif a == "-l" then
+      list_only = true
+      i = i + 1
+    elseif a == "-o" then
+      overwrite = true
+      i = i + 1
+    elseif a == "-n" then
+      overwrite = false
+      i = i + 1
+    elseif a == "-p" then
+      pipe_mode = true
+      i = i + 1
+    elseif a == "-q" or a == "-qq" then
+      quiet = true
+      i = i + 1
     elseif a:sub(1, 1) == "-" and a ~= "-" then
       common.err(NAME, "invalid option: " .. a)
       return 2
@@ -107,7 +118,9 @@ local function main(argv)
   end
 
   local positional = {}
-  for j = i, #args do positional[#positional + 1] = args[j] end
+  for j = i, #args do
+    positional[#positional + 1] = args[j]
+  end
   if #positional == 0 then
     common.err(NAME, "missing archive")
     return 2
@@ -116,7 +129,9 @@ local function main(argv)
   local requested = nil
   if positional[2] then
     requested = {}
-    for j = 2, #positional do requested[positional[j]] = true end
+    for j = 2, #positional do
+      requested[positional[j]] = true
+    end
   end
 
   local entries, err = read_archive(archive)
@@ -196,9 +211,7 @@ local function main(argv)
               else
                 fh:write(data)
                 fh:close()
-                if not quiet then
-                  io.stdout:write("  extracting: ", e.name, "\n")
-                end
+                if not quiet then io.stdout:write("  extracting: ", e.name, "\n") end
               end
             end
           end

@@ -38,9 +38,7 @@ end
 
 local function flag_chars_valid(body)
   for ch in body:gmatch(".") do
-    if ch ~= "n" and ch ~= "e" and ch ~= "E" then
-      return false
-    end
+    if ch ~= "n" and ch ~= "e" and ch ~= "E" then return false end
   end
   return true
 end
@@ -56,13 +54,9 @@ local function main(argv)
 
   while #args > 0 do
     local first = args[1]
-    if first:sub(1, 1) ~= "-" or #first <= 1 or first == "--" then
-      break
-    end
+    if first:sub(1, 1) ~= "-" or #first <= 1 or first == "--" then break end
     local body = first:sub(2)
-    if not flag_chars_valid(body) then
-      break
-    end
+    if not flag_chars_valid(body) then break end
     for ch in body:gmatch(".") do
       if ch == "n" then
         newline = false
@@ -76,14 +70,10 @@ local function main(argv)
   end
 
   local text = table.concat(args, " ")
-  if interp then
-    text = interpret(text)
-  end
+  if interp then text = interpret(text) end
 
   io.stdout:write(text)
-  if newline then
-    io.stdout:write("\n")
-  end
+  if newline then io.stdout:write("\n") end
   return 0
 end
 

@@ -26,12 +26,8 @@ local function pump_socket_to_stdout(sock, timeout)
     elseif partial and partial ~= "" then
       io.stdout:write(partial)
     end
-    if err == "closed" or (not data and not partial) then
-      break
-    end
-    if err and err ~= "timeout" and err ~= "wantread" then
-      break
-    end
+    if err == "closed" or (not data and not partial) then break end
+    if err and err ~= "timeout" and err ~= "wantread" then break end
     if err == "timeout" then break end
   end
   io.stdout:flush()
@@ -65,7 +61,9 @@ local function parse_ports(spec)
     lo, hi = tonumber(lo), tonumber(hi)
     if not lo or not hi or lo > hi then return nil end
     local out = {}
-    for p = lo, hi do out[#out + 1] = p end
+    for p = lo, hi do
+      out[#out + 1] = p
+    end
     return out
   end
   local p = tonumber(spec)
@@ -82,7 +80,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local listen = false
   local port = nil
@@ -96,10 +96,13 @@ local function main(argv)
   while i <= #args do
     local a = args[i]
     if a == "--" then
-      for j = i + 1, #args do positional[#positional + 1] = args[j] end
+      for j = i + 1, #args do
+        positional[#positional + 1] = args[j]
+      end
       break
     elseif a == "-l" then
-      listen = true; i = i + 1
+      listen = true
+      i = i + 1
     elseif a == "-p" and args[i + 1] then
       port = tonumber(args[i + 1])
       if not port then
@@ -108,9 +111,11 @@ local function main(argv)
       end
       i = i + 2
     elseif a == "-z" then
-      zero_io = true; i = i + 1
+      zero_io = true
+      i = i + 1
     elseif a == "-v" then
-      verbose = true; i = i + 1
+      verbose = true
+      i = i + 1
     elseif a == "-w" and args[i + 1] then
       timeout = tonumber(args[i + 1])
       if not timeout then
@@ -119,9 +124,10 @@ local function main(argv)
       end
       i = i + 2
     elseif a == "-u" then
-      udp = true; i = i + 1
+      udp = true
+      i = i + 1
     elseif a == "-4" or a == "-6" then
-      i = i + 1  -- accepted but luasocket picks family from address
+      i = i + 1 -- accepted but luasocket picks family from address
     elseif a:sub(1, 1) == "-" and a ~= "-" and #a > 1 then
       common.err(NAME, "unknown option: " .. a)
       return 2
@@ -154,9 +160,7 @@ local function main(argv)
       common.err(NAME, tostring(err))
       return 1
     end
-    if verbose then
-      io.stderr:write("listening on port ", listen_port, "\n")
-    end
+    if verbose then io.stderr:write("listening on port ", listen_port, "\n") end
     if timeout then srv:settimeout(timeout) end
     local conn, aerr = srv:accept()
     srv:close()
@@ -196,25 +200,19 @@ local function main(argv)
         sock:settimeout(timeout or 3)
         local ok, err = sock:connect(host, p)
         if ok then
-          if verbose then
-            io.stderr:write(string.format(
-              "Connection to %s %d port [tcp/*] succeeded!\n", host, p))
-          end
+          if verbose then io.stderr:write(string.format("Connection to %s %d port [tcp/*] succeeded!\n", host, p)) end
           io.stdout:write(string.format("%d/tcp open\n", p))
           sock:close()
         else
           rc = 1
           if verbose then
-            io.stderr:write(string.format(
-              "nc: connect to %s port %d failed: %s\n", host, p, tostring(err)))
+            io.stderr:write(string.format("nc: connect to %s port %d failed: %s\n", host, p, tostring(err)))
           end
           sock:close()
         end
       else
         rc = 1
-        if verbose then
-          io.stderr:write("nc: socket: " .. tostring(cerr) .. "\n")
-        end
+        if verbose then io.stderr:write("nc: socket: " .. tostring(cerr) .. "\n") end
       end
     end
     return rc
@@ -238,15 +236,10 @@ local function main(argv)
     sock:close()
     return 1
   end
-  if verbose then
-    io.stderr:write(string.format(
-      "Connection to %s %d port [tcp/*] succeeded!\n", host, p))
-  end
+  if verbose then io.stderr:write(string.format("Connection to %s %d port [tcp/*] succeeded!\n", host, p)) end
 
   -- Send stdin (if any), then drain socket -> stdout.
-  if not stdin_is_tty() then
-    send_stdin(sock)
-  end
+  if not stdin_is_tty() then send_stdin(sock) end
   pump_socket_to_stdout(sock, timeout or 30)
   sock:close()
   return 0

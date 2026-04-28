@@ -5,9 +5,7 @@ local common = require("common")
 local NAME = "paste"
 
 local function split_chars(s)
-  if s == "" then
-    return { "\t" }
-  end
+  if s == "" then return { "\t" } end
   local out = {}
   for ch in s:gmatch(".") do
     out[#out + 1] = ch
@@ -16,9 +14,7 @@ local function split_chars(s)
 end
 
 local function join_with_delims(parts, delims)
-  if #parts == 0 then
-    return ""
-  end
+  if #parts == 0 then return "" end
   local out = parts[1]
   for j = 2, #parts do
     local d = delims[((j - 2) % #delims) + 1]
@@ -68,9 +64,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   -- Read each file's lines into memory. Streaming round-robin would be
   -- preferred for large inputs, but Lua 5.1's stdio doesn't expose a
@@ -87,25 +81,19 @@ local function main(argv)
       for line in common.iter_lines_keep_nl(fh) do
         lines[#lines + 1] = rstrip_nl(line)
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
       sources[#sources + 1] = lines
     end
   end
 
   if serial then
     for _, lines in ipairs(sources) do
-      if #lines > 0 then
-        io.stdout:write(join_with_delims(lines, delims), "\n")
-      end
+      if #lines > 0 then io.stdout:write(join_with_delims(lines, delims), "\n") end
     end
   else
     local max_len = 0
     for _, lines in ipairs(sources) do
-      if #lines > max_len then
-        max_len = #lines
-      end
+      if #lines > max_len then max_len = #lines end
     end
     for r = 1, max_len do
       local row = {}

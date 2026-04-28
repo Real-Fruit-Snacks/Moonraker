@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("realpath applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("resolves a relative path to absolute", function()
     local rc, out = helpers.invoke_multicall("realpath", ".")

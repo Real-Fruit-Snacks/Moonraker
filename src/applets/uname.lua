@@ -13,9 +13,7 @@ local function probe_posix(flag)
   if not p then return nil end
   local line = p:read("*l")
   p:close()
-  if line and line ~= "" then
-    return (line:gsub("[\r\n]+$", ""))
-  end
+  if line and line ~= "" then return (line:gsub("[\r\n]+$", "")) end
   return nil
 end
 
@@ -32,15 +30,19 @@ local function field(ch)
       end
       return "unknown"
     end
-    if ch == "m" or ch == "p" or ch == "i" then
-      return os.getenv("PROCESSOR_ARCHITECTURE") or "unknown"
-    end
+    if ch == "m" or ch == "p" or ch == "i" then return os.getenv("PROCESSOR_ARCHITECTURE") or "unknown" end
     if ch == "o" then return "Windows" end
     return "unknown"
   end
   local flag_map = {
-    s = "-s", n = "-n", r = "-r", v = "-v",
-    m = "-m", p = "-p", i = "-i", o = "-o",
+    s = "-s",
+    n = "-n",
+    r = "-r",
+    v = "-v",
+    m = "-m",
+    p = "-p",
+    i = "-i",
+    o = "-o",
   }
   return probe_posix(flag_map[ch]) or "unknown"
 end
@@ -54,7 +56,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local seen = {}
   local wanted = {}
@@ -64,16 +68,34 @@ local function main(argv)
     local a = args[i]
     if a == "--" then break end
     if a == "-a" or a == "--all" then
-      for ch in ("snrvmpio"):gmatch(".") do add(seen, wanted, ch) end
+      for ch in ("snrvmpio"):gmatch(".") do
+        add(seen, wanted, ch)
+      end
       i = i + 1
-    elseif a == "--kernel-name" then add(seen, wanted, "s"); i = i + 1
-    elseif a == "--nodename" then add(seen, wanted, "n"); i = i + 1
-    elseif a == "--kernel-release" then add(seen, wanted, "r"); i = i + 1
-    elseif a == "--kernel-version" then add(seen, wanted, "v"); i = i + 1
-    elseif a == "--machine" then add(seen, wanted, "m"); i = i + 1
-    elseif a == "--processor" then add(seen, wanted, "p"); i = i + 1
-    elseif a == "--hardware-platform" then add(seen, wanted, "i"); i = i + 1
-    elseif a == "--operating-system" then add(seen, wanted, "o"); i = i + 1
+    elseif a == "--kernel-name" then
+      add(seen, wanted, "s")
+      i = i + 1
+    elseif a == "--nodename" then
+      add(seen, wanted, "n")
+      i = i + 1
+    elseif a == "--kernel-release" then
+      add(seen, wanted, "r")
+      i = i + 1
+    elseif a == "--kernel-version" then
+      add(seen, wanted, "v")
+      i = i + 1
+    elseif a == "--machine" then
+      add(seen, wanted, "m")
+      i = i + 1
+    elseif a == "--processor" then
+      add(seen, wanted, "p")
+      i = i + 1
+    elseif a == "--hardware-platform" then
+      add(seen, wanted, "i")
+      i = i + 1
+    elseif a == "--operating-system" then
+      add(seen, wanted, "o")
+      i = i + 1
     elseif a:sub(1, 1) == "-" and #a > 1 and a ~= "-" then
       if not a:sub(2):match("^[snrvmpioa]+$") then
         common.err(NAME, "invalid option: " .. a)
@@ -81,7 +103,9 @@ local function main(argv)
       end
       for ch in a:sub(2):gmatch(".") do
         if ch == "a" then
-          for c in ("snrvmpio"):gmatch(".") do add(seen, wanted, c) end
+          for c in ("snrvmpio"):gmatch(".") do
+            add(seen, wanted, c)
+          end
         else
           add(seen, wanted, ch)
         end

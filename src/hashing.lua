@@ -20,9 +20,7 @@ local ALGOS = {
 --- Compute the digest of an entire file or stdin (when path is "-").
 local function compute(path, algo)
   local hash_fn = ALGOS[algo]
-  if not hash_fn then
-    return nil, "unknown algorithm: " .. tostring(algo)
-  end
+  if not hash_fn then return nil, "unknown algorithm: " .. tostring(algo) end
   local fh, err = common.open_input(path, "rb")
   if not fh then return nil, err end
   local data = common.read_all(fh)
@@ -66,28 +64,20 @@ local function do_check(applet, algo, label, files, opts)
         if not expected then
           malformed = malformed + 1
           if opts.warn then
-            common.err(applet,
-              string.format("%s:%d: improperly formatted %s checksum line",
-                f, lineno, label))
+            common.err(applet, string.format("%s:%d: improperly formatted %s checksum line", f, lineno, label))
           end
         else
           local actual, cerr = compute(target, algo)
           if not actual then
             unreadable = unreadable + 1
-            if not opts.status then
-              io.stdout:write(target, ": FAILED open or read\n")
-            end
+            if not opts.status then io.stdout:write(target, ": FAILED open or read\n") end
             local _ = cerr
           elseif actual:lower() == expected:lower() then
             ok_count = ok_count + 1
-            if not opts.status and not opts.quiet then
-              io.stdout:write(target, ": OK\n")
-            end
+            if not opts.status and not opts.quiet then io.stdout:write(target, ": OK\n") end
           else
             bad = bad + 1
-            if not opts.status then
-              io.stdout:write(target, ": FAILED\n")
-            end
+            if not opts.status then io.stdout:write(target, ": FAILED\n") end
           end
         end
       end
@@ -98,12 +88,10 @@ local function do_check(applet, algo, label, files, opts)
   if bad > 0 or unreadable > 0 then
     if not opts.status then
       if bad > 0 then
-        io.stderr:write(string.format(
-          "%s: WARNING: %d computed checksum did NOT match\n", applet, bad))
+        io.stderr:write(string.format("%s: WARNING: %d computed checksum did NOT match\n", applet, bad))
       end
       if unreadable > 0 then
-        io.stderr:write(string.format(
-          "%s: WARNING: %d listed file could not be read\n", applet, unreadable))
+        io.stderr:write(string.format("%s: WARNING: %d listed file could not be read\n", applet, unreadable))
       end
     end
     return 1
@@ -120,8 +108,13 @@ function M.run(applet, algo, label, argv)
   end
 
   local opts = {
-    check = false, binary = false, tag = false,
-    quiet = false, status = false, warn = false, strict = false,
+    check = false,
+    binary = false,
+    tag = false,
+    quiet = false,
+    status = false,
+    warn = false,
+    strict = false,
     zero = false,
   }
   local files = {}
@@ -130,18 +123,29 @@ function M.run(applet, algo, label, argv)
   while i <= #args do
     local a = args[i]
     if a == "--" then
-      for j = i + 1, #args do files[#files + 1] = args[j] end
+      for j = i + 1, #args do
+        files[#files + 1] = args[j]
+      end
       break
     end
-    if a == "-c" or a == "--check" then opts.check = true
-    elseif a == "-b" or a == "--binary" then opts.binary = true
-    elseif a == "-t" or a == "--text" then opts.binary = false
-    elseif a == "--tag" then opts.tag = true
-    elseif a == "--quiet" then opts.quiet = true
-    elseif a == "--status" then opts.status = true
-    elseif a == "-w" or a == "--warn" then opts.warn = true
-    elseif a == "--strict" then opts.strict = true
-    elseif a == "-z" or a == "--zero" then opts.zero = true
+    if a == "-c" or a == "--check" then
+      opts.check = true
+    elseif a == "-b" or a == "--binary" then
+      opts.binary = true
+    elseif a == "-t" or a == "--text" then
+      opts.binary = false
+    elseif a == "--tag" then
+      opts.tag = true
+    elseif a == "--quiet" then
+      opts.quiet = true
+    elseif a == "--status" then
+      opts.status = true
+    elseif a == "-w" or a == "--warn" then
+      opts.warn = true
+    elseif a == "--strict" then
+      opts.strict = true
+    elseif a == "-z" or a == "--zero" then
+      opts.zero = true
     elseif a:sub(1, 1) == "-" and a ~= "-" then
       common.err(applet, "invalid option: " .. a)
       return 2
@@ -153,9 +157,7 @@ function M.run(applet, algo, label, argv)
 
   if #files == 0 then files = { "-" } end
 
-  if opts.check then
-    return do_check(applet, algo, label, files, opts)
-  end
+  if opts.check then return do_check(applet, algo, label, files, opts) end
 
   local rc = 0
   local endch = opts.zero and "\0" or "\n"

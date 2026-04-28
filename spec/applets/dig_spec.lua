@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("dig applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("requires a query name", function()
     local rc = helpers.invoke_multicall("dig")

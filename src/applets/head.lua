@@ -50,9 +50,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
   local multi = #files > 1
   local rc = 0
 
@@ -63,9 +61,7 @@ local function main(argv)
       rc = 1
     else
       if multi then
-        if idx > 1 then
-          io.stdout:write("\n")
-        end
+        if idx > 1 then io.stdout:write("\n") end
         io.stdout:write("==> ", f, " <==\n")
       end
       if bytes_mode then
@@ -74,16 +70,12 @@ local function main(argv)
       else
         local count = 0
         for line in common.iter_lines_keep_nl(fh) do
-          if count >= lines then
-            break
-          end
+          if count >= lines then break end
           io.stdout:write(line)
           count = count + 1
         end
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()

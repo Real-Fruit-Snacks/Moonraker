@@ -41,21 +41,11 @@ end
 
 local function format_row(counts, label, want_lines, want_words, want_bytes, want_chars)
   local parts = {}
-  if want_lines then
-    parts[#parts + 1] = string.format("%7d", counts[1])
-  end
-  if want_words then
-    parts[#parts + 1] = string.format("%7d", counts[2])
-  end
-  if want_bytes then
-    parts[#parts + 1] = string.format("%7d", counts[3])
-  end
-  if want_chars then
-    parts[#parts + 1] = string.format("%7d", counts[4])
-  end
-  if label and label ~= "" and label ~= "-" then
-    parts[#parts + 1] = label
-  end
+  if want_lines then parts[#parts + 1] = string.format("%7d", counts[1]) end
+  if want_words then parts[#parts + 1] = string.format("%7d", counts[2]) end
+  if want_bytes then parts[#parts + 1] = string.format("%7d", counts[3]) end
+  if want_chars then parts[#parts + 1] = string.format("%7d", counts[4]) end
+  if label and label ~= "" and label ~= "-" then parts[#parts + 1] = label end
   return table.concat(parts, " ")
 end
 
@@ -101,9 +91,7 @@ local function main(argv)
     want_lines, want_words, want_bytes = true, true, true
   end
 
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   local totals = { 0, 0, 0, 0 }
   local results = {}
@@ -116,9 +104,7 @@ local function main(argv)
       rc = 1
     else
       local data = common.read_all(fh)
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
       local l, w, b, c = count_buffer(data)
       results[#results + 1] = { counts = { l, w, b, c }, label = f }
       totals[1] = totals[1] + l
@@ -129,16 +115,10 @@ local function main(argv)
   end
 
   for _, r in ipairs(results) do
-    io.stdout:write(
-      format_row(r.counts, r.label, want_lines, want_words, want_bytes, want_chars),
-      "\n"
-    )
+    io.stdout:write(format_row(r.counts, r.label, want_lines, want_words, want_bytes, want_chars), "\n")
   end
   if #results > 1 then
-    io.stdout:write(
-      format_row(totals, "total", want_lines, want_words, want_bytes, want_chars),
-      "\n"
-    )
+    io.stdout:write(format_row(totals, "total", want_lines, want_words, want_bytes, want_chars), "\n")
   end
   return rc
 end

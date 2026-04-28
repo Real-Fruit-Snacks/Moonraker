@@ -19,8 +19,12 @@ describe("tar applet", function()
   end)
 
   after_each(function()
-    for _, p in ipairs(cleanup_files) do pcall(os.remove, p) end
-    for k = #cleanup_dirs, 1, -1 do pcall(lfs.rmdir, cleanup_dirs[k]) end
+    for _, p in ipairs(cleanup_files) do
+      pcall(os.remove, p)
+    end
+    for k = #cleanup_dirs, 1, -1 do
+      pcall(lfs.rmdir, cleanup_dirs[k])
+    end
   end)
 
   local function add_file(name, content)
@@ -75,8 +79,7 @@ describe("tar applet", function()
     add_file("b.txt", "bravo")
     local archive = tmp_root .. "/test.tar"
     cleanup_files[#cleanup_files + 1] = archive
-    local rc = helpers.invoke_multicall("tar", "-cf", archive,
-      tmp_root .. "/a.txt", tmp_root .. "/b.txt")
+    local rc = helpers.invoke_multicall("tar", "-cf", archive, tmp_root .. "/a.txt", tmp_root .. "/b.txt")
     assert.equal(0, rc)
     -- List
     local rc2, out = helpers.invoke_multicall("tar", "-tf", archive)

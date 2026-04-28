@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("uniq applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("removes adjacent duplicates", function()
     local rc, out = helpers.invoke_with_stdin("uniq", "a\na\nb\nb\nc\n")

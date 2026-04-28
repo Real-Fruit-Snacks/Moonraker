@@ -13,22 +13,16 @@ local function getcwd()
   local ok, lfs = pcall(require, "lfs")
   if ok and type(lfs) == "table" and type(lfs.currentdir) == "function" then
     local dir = lfs.currentdir()
-    if dir and dir ~= "" then
-      return dir
-    end
+    if dir and dir ~= "" then return dir end
   end
 
   local env_pwd = os.getenv("PWD")
-  if env_pwd and env_pwd ~= "" then
-    return env_pwd
-  end
+  if env_pwd and env_pwd ~= "" then return env_pwd end
 
   -- Windows shells set %CD% to the current directory automatically.
   if common.is_windows() then
     local env_cd = os.getenv("CD")
-    if env_cd and env_cd ~= "" then
-      return env_cd
-    end
+    if env_cd and env_cd ~= "" then return env_cd end
   end
 
   local cmd = common.is_windows() and "cd" or "pwd"
@@ -36,9 +30,7 @@ local function getcwd()
   if pipe then
     local line = pipe:read("*l")
     pipe:close()
-    if line and line ~= "" then
-      return (line:gsub("[\r\n]+$", ""))
-    end
+    if line and line ~= "" then return (line:gsub("[\r\n]+$", "")) end
   end
 
   return "."

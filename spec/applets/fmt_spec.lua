@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("fmt applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("reflows a paragraph to default 75 cols", function()
     local input = "foo bar baz\nqux quux\n"

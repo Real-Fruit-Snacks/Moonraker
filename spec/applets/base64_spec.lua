@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("base64 applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("encodes ASCII", function()
     local rc, out = helpers.invoke_with_stdin("base64", "Man")

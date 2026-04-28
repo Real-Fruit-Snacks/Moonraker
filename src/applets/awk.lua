@@ -30,7 +30,9 @@ local SUBSEP = "\28"
 local NEXT_RECORD = {}
 local BREAK_LOOP = {}
 local CONTINUE_LOOP = {}
-local function EXIT_PROGRAM(code) return { _exit = true, code = code } end
+local function EXIT_PROGRAM(code)
+  return { _exit = true, code = code }
+end
 
 -- ---------------------------------------------------------------------
 -- Number / string / boolean coercions
@@ -54,16 +56,12 @@ local function to_num(v)
   if v == nil then return 0 end
   -- Match leading numeric prefix (awk-style).
   local m = tostring(v):match("^%s*([+-]?%d+%.?%d*[eE]?[+-]?%d*)")
-  if not m or m == "" then
-    m = tostring(v):match("^%s*([+-]?%.%d+[eE]?[+-]?%d*)")
-  end
+  if not m or m == "" then m = tostring(v):match("^%s*([+-]?%.%d+[eE]?[+-]?%d*)") end
   return tonumber(m) or 0
 end
 
 local function format_num(n, ofmt)
-  if n == math.floor(n) and math.abs(n) < 1e16 then
-    return string.format("%d", n)
-  end
+  if n == math.floor(n) and math.abs(n) < 1e16 then return string.format("%d", n) end
   return string.format(ofmt or "%.6g", n)
 end
 
@@ -89,28 +87,59 @@ end
 -- ---------------------------------------------------------------------
 
 local KEYWORDS = {
-  BEGIN = true, ["END"] = true,
-  ["if"] = true, ["else"] = true,
-  ["while"] = true, ["for"] = true, ["do"] = true, ["in"] = true,
-  print = true, printf = true,
-  next = true, exit = true, ["break"] = true, continue = true,
-  delete = true, ["function"] = true, ["return"] = true, getline = true,
+  BEGIN = true,
+  ["END"] = true,
+  ["if"] = true,
+  ["else"] = true,
+  ["while"] = true,
+  ["for"] = true,
+  ["do"] = true,
+  ["in"] = true,
+  print = true,
+  printf = true,
+  next = true,
+  exit = true,
+  ["break"] = true,
+  continue = true,
+  delete = true,
+  ["function"] = true,
+  ["return"] = true,
+  getline = true,
 }
 
 local MULTI_OPS = {
-  ["=="] = true, ["!="] = true, ["<="] = true, [">="] = true,
-  ["&&"] = true, ["||"] = true, ["++"] = true, ["--"] = true,
-  ["+="] = true, ["-="] = true, ["*="] = true, ["/="] = true,
-  ["%="] = true, ["^="] = true, ["**"] = true, ["!~"] = true,
+  ["=="] = true,
+  ["!="] = true,
+  ["<="] = true,
+  [">="] = true,
+  ["&&"] = true,
+  ["||"] = true,
+  ["++"] = true,
+  ["--"] = true,
+  ["+="] = true,
+  ["-="] = true,
+  ["*="] = true,
+  ["/="] = true,
+  ["%="] = true,
+  ["^="] = true,
+  ["**"] = true,
+  ["!~"] = true,
 }
 
 local SINGLE_OPS = "+-*%^=<>!~,;(){}[]?:$/"
 
 local function regex_context(prev)
   if prev == nil then return true end
-  if prev == "NUMBER" or prev == "STRING" or prev == "NAME"
-     or prev == "REGEX" or prev == ")" or prev == "]"
-     or prev == "++" or prev == "--" then
+  if
+    prev == "NUMBER"
+    or prev == "STRING"
+    or prev == "NAME"
+    or prev == "REGEX"
+    or prev == ")"
+    or prev == "]"
+    or prev == "++"
+    or prev == "--"
+  then
     return false
   end
   return true
@@ -135,7 +164,9 @@ local function tokenize(src)
     if i <= #src and src:sub(i, i):match("[eE]") then
       i = i + 1
       if i <= #src and src:sub(i, i):match("[+-]") then i = i + 1 end
-      while i <= #src and src:sub(i, i):match("%d") do i = i + 1 end
+      while i <= #src and src:sub(i, i):match("%d") do
+        i = i + 1
+      end
     end
     return tonumber(src:sub(start, i - 1)) or 0
   end
@@ -148,9 +179,16 @@ local function tokenize(src)
       if c == "\\" and i + 1 <= #src then
         local n = src:sub(i + 1, i + 1)
         local esc = ({
-          n = "\n", t = "\t", r = "\r", ["\\"] = "\\",
-          ['"'] = '"', ["/"] = "/", a = "\a", b = "\b",
-          f = "\f", v = "\v",
+          n = "\n",
+          t = "\t",
+          r = "\r",
+          ["\\"] = "\\",
+          ['"'] = '"',
+          ["/"] = "/",
+          a = "\a",
+          b = "\b",
+          f = "\f",
+          v = "\v",
         })[n]
         out[#out + 1] = esc or n
         i = i + 2
@@ -192,42 +230,56 @@ local function tokenize(src)
 
   local function read_name()
     local start = i
-    while i <= #src and src:sub(i, i):match("[%w_]") do i = i + 1 end
+    while i <= #src and src:sub(i, i):match("[%w_]") do
+      i = i + 1
+    end
     return src:sub(start, i - 1)
   end
 
   while i <= #src do
     local c = src:sub(i, i)
     if c == "#" then
-      while i <= #src and src:sub(i, i) ~= "\n" do i = i + 1 end
+      while i <= #src and src:sub(i, i) ~= "\n" do
+        i = i + 1
+      end
     elseif c == " " or c == "\t" then
       i = i + 1
     elseif c == "\\" and src:sub(i + 1, i + 1) == "\n" then
-      i = i + 2; line = line + 1
+      i = i + 2
+      line = line + 1
     elseif c == "\n" then
-      add("NEWLINE", "\n"); i = i + 1; line = line + 1
+      add("NEWLINE", "\n")
+      i = i + 1
+      line = line + 1
     elseif c:match("%d") or (c == "." and src:sub(i + 1, i + 1):match("%d")) then
       add("NUMBER", read_number())
     elseif c == '"' then
       add("STRING", read_string())
     elseif c:match("[%a_]") then
       local name = read_name()
-      if KEYWORDS[name] then add(name, name)
-      else add("NAME", name) end
+      if KEYWORDS[name] then
+        add(name, name)
+      else
+        add("NAME", name)
+      end
     elseif c == "/" then
       if regex_context(prev) then
         add("REGEX", read_regex())
       elseif src:sub(i + 1, i + 1) == "=" then
-        add("/=", "/="); i = i + 2
+        add("/=", "/=")
+        i = i + 2
       else
-        add("/", "/"); i = i + 1
+        add("/", "/")
+        i = i + 1
       end
     else
       local two = src:sub(i, i + 1)
       if MULTI_OPS[two] then
-        add(two, two); i = i + 2
+        add(two, two)
+        i = i + 2
       elseif SINGLE_OPS:find(c, 1, true) then
-        add(c, c); i = i + 1
+        add(c, c)
+        i = i + 1
       else
         error("awk: unexpected character '" .. c .. "' at line " .. line)
       end
@@ -248,9 +300,15 @@ local function new_parser(tokens)
   return setmetatable({ t = tokens, i = 1 }, Parser)
 end
 
-function Parser:peek(off) return self.t[self.i + (off or 0)].kind end
-function Parser:peek_val() return self.t[self.i].val end
-function Parser:cur_line() return self.t[self.i].line end
+function Parser:peek(off)
+  return self.t[self.i + (off or 0)].kind
+end
+function Parser:peek_val()
+  return self.t[self.i].val
+end
+function Parser:cur_line()
+  return self.t[self.i].line
+end
 
 function Parser:advance()
   local tok = self.t[self.i]
@@ -260,27 +318,39 @@ end
 
 function Parser:eat(kind)
   if self:peek() ~= kind then
-    error(string.format("awk: expected %s, got %s at line %d",
-      kind, self:peek(), self:cur_line()))
+    error(string.format("awk: expected %s, got %s at line %d", kind, self:peek(), self:cur_line()))
   end
   return self:advance()
 end
 
 function Parser:accept(...)
   for _, k in ipairs({ ... }) do
-    if self:peek() == k then self:advance(); return true end
+    if self:peek() == k then
+      self:advance()
+      return true
+    end
   end
   return false
 end
 
 function Parser:skip_terminators()
-  while self:peek() == "NEWLINE" or self:peek() == ";" do self:advance() end
+  while self:peek() == "NEWLINE" or self:peek() == ";" do
+    self:advance()
+  end
 end
 
 local VALUE_START = {
-  NUMBER = true, STRING = true, NAME = true, REGEX = true,
-  ["$"] = true, ["("] = true, ["!"] = true, ["-"] = true,
-  ["+"] = true, ["++"] = true, ["--"] = true,
+  NUMBER = true,
+  STRING = true,
+  NAME = true,
+  REGEX = true,
+  ["$"] = true,
+  ["("] = true,
+  ["!"] = true,
+  ["-"] = true,
+  ["+"] = true,
+  ["++"] = true,
+  ["--"] = true,
 }
 
 function Parser:parse_program()
@@ -302,9 +372,7 @@ function Parser:parse_rule()
     self:advance()
     return { kind = "END", action = self:parse_action(true) }
   end
-  if self:peek() == "{" then
-    return { kind = "main", action = self:parse_action(true) }
-  end
+  if self:peek() == "{" then return { kind = "main", action = self:parse_action(true) } end
   local p1 = self:parse_expr()
   local p2 = nil
   local kind = "main"
@@ -319,9 +387,7 @@ end
 
 function Parser:parse_action(required)
   if self:peek() ~= "{" then
-    if required then
-      error("awk: expected { at line " .. self:cur_line())
-    end
+    if required then error("awk: expected { at line " .. self:cur_line()) end
     return nil
   end
   self:eat("{")
@@ -335,9 +401,7 @@ function Parser:parse_stmts()
   self:skip_terminators()
   while self:peek() ~= "}" and self:peek() ~= "EOF" do
     stmts[#stmts + 1] = self:parse_stmt()
-    if self:peek() == ";" or self:peek() == "NEWLINE" then
-      self:skip_terminators()
-    end
+    if self:peek() == ";" or self:peek() == "NEWLINE" then self:skip_terminators() end
   end
   return stmts
 end
@@ -362,26 +426,32 @@ function Parser:parse_stmt()
     self:advance()
     return self:parse_print_args(true)
   end
-  if tok == "next" then self:advance(); return { kind = "next" } end
+  if tok == "next" then
+    self:advance()
+    return { kind = "next" }
+  end
   if tok == "exit" then
     self:advance()
     local e = nil
-    if self:peek() ~= ";" and self:peek() ~= "NEWLINE"
-       and self:peek() ~= "}" and self:peek() ~= "EOF" then
+    if self:peek() ~= ";" and self:peek() ~= "NEWLINE" and self:peek() ~= "}" and self:peek() ~= "EOF" then
       e = self:parse_expr()
     end
     return { kind = "exit", expr = e }
   end
-  if tok == "break" then self:advance(); return { kind = "break" } end
-  if tok == "continue" then self:advance(); return { kind = "continue" } end
+  if tok == "break" then
+    self:advance()
+    return { kind = "break" }
+  end
+  if tok == "continue" then
+    self:advance()
+    return { kind = "continue" }
+  end
   if tok == "delete" then
     self:advance()
     local target = self:parse_primary_lhs()
     return { kind = "delete", target = target }
   end
-  if tok == "getline" then
-    error("awk: getline is not supported in this build")
-  end
+  if tok == "getline" then error("awk: getline is not supported in this build") end
   local e = self:parse_expr()
   return { kind = "expr", expr = e }
 end
@@ -394,7 +464,9 @@ function Parser:parse_if()
   self:skip_terminators()
   local then_branch = self:parse_stmt()
   local saved = self.i
-  while self:peek() == ";" or self:peek() == "NEWLINE" do self:advance() end
+  while self:peek() == ";" or self:peek() == "NEWLINE" do
+    self:advance()
+  end
   local else_branch = nil
   if self:peek() == "else" then
     self:advance()
@@ -420,7 +492,9 @@ function Parser:parse_do()
   self:eat("do")
   self:skip_terminators()
   local body = self:parse_stmt()
-  while self:peek() == ";" or self:peek() == "NEWLINE" do self:advance() end
+  while self:peek() == ";" or self:peek() == "NEWLINE" do
+    self:advance()
+  end
   self:eat("while")
   self:eat("(")
   local cond = self:parse_expr()
@@ -433,8 +507,7 @@ function Parser:parse_for()
   self:eat("(")
   local saved = self.i
   -- Try for-in: NAME in NAME )
-  if self:peek() == "NAME" and self:peek(1) == "in"
-     and self:peek(2) == "NAME" and self:peek(3) == ")" then
+  if self:peek() == "NAME" and self:peek(1) == "in" and self:peek(2) == "NAME" and self:peek(3) == ")" then
     local var = self:advance().val
     self:advance()
     local arrtok = self:advance()
@@ -444,13 +517,20 @@ function Parser:parse_for()
     return { kind = "forin", var = var, arr = arrtok.val, body = body }
   end
   -- (key in arr)
-  if self:peek() == "(" and self:peek(1) == "NAME" and self:peek(2) == "in"
-     and self:peek(3) == "NAME" and self:peek(4) == ")" and self:peek(5) == ")" then
+  if
+    self:peek() == "("
+    and self:peek(1) == "NAME"
+    and self:peek(2) == "in"
+    and self:peek(3) == "NAME"
+    and self:peek(4) == ")"
+    and self:peek(5) == ")"
+  then
     self:advance()
     local var = self:advance().val
     self:advance()
     local arrtok = self:advance()
-    self:eat(")"); self:eat(")")
+    self:eat(")")
+    self:eat(")")
     self:skip_terminators()
     local body = self:parse_stmt()
     return { kind = "forin", var = var, arr = arrtok.val, body = body }
@@ -472,8 +552,7 @@ end
 
 function Parser:parse_print_args(is_printf)
   local args = {}
-  if self:peek() ~= ";" and self:peek() ~= "NEWLINE"
-     and self:peek() ~= "}" and self:peek() ~= "EOF" then
+  if self:peek() ~= ";" and self:peek() ~= "NEWLINE" and self:peek() ~= "}" and self:peek() ~= "EOF" then
     args[#args + 1] = self:parse_expr()
     while self:peek() == "," do
       self:advance()
@@ -485,13 +564,14 @@ end
 
 -- Expression precedence climbing.
 
-function Parser:parse_expr() return self:parse_assign() end
+function Parser:parse_expr()
+  return self:parse_assign()
+end
 
 function Parser:parse_assign()
   local left = self:parse_cond()
   local op = self:peek()
-  if op == "=" or op == "+=" or op == "-=" or op == "*="
-     or op == "/=" or op == "%=" or op == "^=" then
+  if op == "=" or op == "+=" or op == "-=" or op == "*=" or op == "/=" or op == "%=" or op == "^=" then
     self:advance()
     local value = self:parse_assign()
     if left.kind ~= "name" and left.kind ~= "field" and left.kind ~= "index" then
@@ -555,8 +635,7 @@ end
 function Parser:parse_rel()
   local left = self:parse_concat()
   local op = self:peek()
-  if op == "<" or op == "<=" or op == ">" or op == ">="
-     or op == "==" or op == "!=" then
+  if op == "<" or op == "<=" or op == ">" or op == ">=" or op == "==" or op == "!=" then
     self:advance()
     local right = self:parse_concat()
     return { kind = "binary", op = op, a = left, b = right }
@@ -566,8 +645,7 @@ end
 
 function Parser:parse_concat()
   local left = self:parse_add()
-  while VALUE_START[self:peek()]
-        and self:peek() ~= "-" and self:peek() ~= "+" and self:peek() ~= "!" do
+  while VALUE_START[self:peek()] and self:peek() ~= "-" and self:peek() ~= "+" and self:peek() ~= "!" do
     local right = self:parse_add()
     left = { kind = "concat", a = left, b = right }
   end
@@ -713,9 +791,18 @@ local function awk_printf(fmt, args, ofmt)
     if c ~= "%" then
       if c == "\\" and i + 1 <= #fmt then
         local n = fmt:sub(i + 1, i + 1)
-        local esc = ({ n = "\n", t = "\t", r = "\r", ["\\"] = "\\",
-          ["/"] = "/", ['"'] = '"', a = "\a", b = "\b",
-          f = "\f", v = "\v" })[n]
+        local esc = ({
+          n = "\n",
+          t = "\t",
+          r = "\r",
+          ["\\"] = "\\",
+          ["/"] = "/",
+          ['"'] = '"',
+          a = "\a",
+          b = "\b",
+          f = "\f",
+          v = "\v",
+        })[n]
         out[#out + 1] = esc or n
         i = i + 2
       else
@@ -729,11 +816,8 @@ local function awk_printf(fmt, args, ofmt)
         i = i + 2
       else
         -- Parse %[flags][width][.precision]conv
-        local s, e, flags, width, prec, conv = fmt:find(
-          "^%%([-+ #0]*)(%d*%*?)%.?(%d*%*?)([diouxXfeEgGsc%%])", i)
-        if not s then
-          error("awk: bad printf format at position " .. i)
-        end
+        local s, e, flags, width, prec, conv = fmt:find("^%%([-+ #0]*)(%d*%*?)%.?(%d*%*?)([diouxXfeEgGsc%%])", i)
+        if not s then error("awk: bad printf format at position " .. i) end
         if width == "*" then
           width = tostring(math.floor(to_num(args[ai] or 0)))
           ai = ai + 1
@@ -754,8 +838,7 @@ local function awk_printf(fmt, args, ofmt)
         elseif conv == "u" then
           spec = (spec:gsub("u", "d"))
           out[#out + 1] = string.format(spec, math.floor(to_num(val)))
-        elseif conv == "f" or conv == "e" or conv == "E"
-               or conv == "g" or conv == "G" then
+        elseif conv == "f" or conv == "e" or conv == "E" or conv == "g" or conv == "G" then
           out[#out + 1] = string.format(spec, to_num(val))
         elseif conv == "s" then
           out[#out + 1] = string.format(spec, to_str(val, ofmt))
@@ -787,16 +870,23 @@ local function new_interp(program, opts)
   self.globals = {}
   self.arrays = {}
   self.fields = { [0] = "" }
-  self.NR = 0; self.NF = 0; self.FNR = 0
+  self.NR = 0
+  self.NF = 0
+  self.FNR = 0
   self.FILENAME = ""
   self.FS = opts.fs or " "
-  self.OFS = " "; self.ORS = "\n"; self.RS = "\n"
+  self.OFS = " "
+  self.ORS = "\n"
+  self.RS = "\n"
   self.SUBSEP = SUBSEP
-  self.OFMT = "%.6g"; self.CONVFMT = "%.6g"
+  self.OFMT = "%.6g"
+  self.CONVFMT = "%.6g"
   self.range_active = {}
   self.exit_code = nil
   self.files = opts.files or {}
-  for k, v in pairs(opts.vars or {}) do self.globals[k] = v end
+  for k, v in pairs(opts.vars or {}) do
+    self.globals[k] = v
+  end
   return self
 end
 
@@ -816,28 +906,62 @@ function Interp:get_var(name)
 end
 
 function Interp:set_var(name, value)
-  if name == "NR" then self.NR = math.floor(to_num(value)); return end
+  if name == "NR" then
+    self.NR = math.floor(to_num(value))
+    return
+  end
   if name == "NF" then
     local n = math.floor(to_num(value))
     if n < 0 then error("awk: NF must be non-negative") end
     if n > self.NF then
-      for k = self.NF + 1, n do self.fields[k] = "" end
+      for k = self.NF + 1, n do
+        self.fields[k] = ""
+      end
     elseif n < self.NF then
-      for k = n + 1, self.NF do self.fields[k] = nil end
+      for k = n + 1, self.NF do
+        self.fields[k] = nil
+      end
     end
     self.NF = n
     self:rebuild_line()
     return
   end
-  if name == "FNR" then self.FNR = math.floor(to_num(value)); return end
-  if name == "FILENAME" then self.FILENAME = to_str(value); return end
-  if name == "FS" then self.FS = to_str(value); return end
-  if name == "OFS" then self.OFS = to_str(value); return end
-  if name == "ORS" then self.ORS = to_str(value); return end
-  if name == "RS" then self.RS = to_str(value); return end
-  if name == "SUBSEP" then self.SUBSEP = to_str(value); return end
-  if name == "OFMT" then self.OFMT = to_str(value); return end
-  if name == "CONVFMT" then self.CONVFMT = to_str(value); return end
+  if name == "FNR" then
+    self.FNR = math.floor(to_num(value))
+    return
+  end
+  if name == "FILENAME" then
+    self.FILENAME = to_str(value)
+    return
+  end
+  if name == "FS" then
+    self.FS = to_str(value)
+    return
+  end
+  if name == "OFS" then
+    self.OFS = to_str(value)
+    return
+  end
+  if name == "ORS" then
+    self.ORS = to_str(value)
+    return
+  end
+  if name == "RS" then
+    self.RS = to_str(value)
+    return
+  end
+  if name == "SUBSEP" then
+    self.SUBSEP = to_str(value)
+    return
+  end
+  if name == "OFMT" then
+    self.OFMT = to_str(value)
+    return
+  end
+  if name == "CONVFMT" then
+    self.CONVFMT = to_str(value)
+    return
+  end
   self.globals[name] = value
 end
 
@@ -845,12 +969,16 @@ function Interp:split_fields(line)
   if self.FS == " " then
     -- Default: split on runs of whitespace
     local out = {}
-    for tok in line:gmatch("%S+") do out[#out + 1] = tok end
+    for tok in line:gmatch("%S+") do
+      out[#out + 1] = tok
+    end
     return out
   end
   if self.FS == "" then
     local out = {}
-    for k = 1, #line do out[#out + 1] = line:sub(k, k) end
+    for k = 1, #line do
+      out[#out + 1] = line:sub(k, k)
+    end
     return out
   end
   if #self.FS == 1 then
@@ -885,22 +1013,31 @@ end
 
 function Interp:rebuild_line()
   local parts = {}
-  for k = 1, self.NF do parts[#parts + 1] = self.fields[k] or "" end
+  for k = 1, self.NF do
+    parts[#parts + 1] = self.fields[k] or ""
+  end
   self.fields[0] = table.concat(parts, self.OFS)
 end
 
 function Interp:set_record(line)
   self.fields = { [0] = line }
   local parts = self:split_fields(line)
-  for k, v in ipairs(parts) do self.fields[k] = v end
+  for k, v in ipairs(parts) do
+    self.fields[k] = v
+  end
   self.NF = #parts
 end
 
 function Interp:set_field(n, val)
   local s = to_str(val, self.OFMT)
-  if n == 0 then self:set_record(s); return end
+  if n == 0 then
+    self:set_record(s)
+    return
+  end
   if n < 0 then error("awk: negative field index: " .. n) end
-  for k = self.NF + 1, n do self.fields[k] = "" end
+  for k = self.NF + 1, n do
+    self.fields[k] = ""
+  end
   self.fields[n] = s
   if n > self.NF then self.NF = n end
   self:rebuild_line()
@@ -915,9 +1052,7 @@ end
 -- ---- expression evaluation ----
 
 local function num_value(x)
-  if x == math.floor(x) and math.abs(x) < 1e16 then
-    return math.floor(x)
-  end
+  if x == math.floor(x) and math.abs(x) < 1e16 then return math.floor(x) end
   return x
 end
 
@@ -937,9 +1072,7 @@ function Interp:eval(e)
     return pat:find(self.fields[0]) and 1 or 0
   end
   if k == "name" then
-    if self.arrays[e.name] then
-      error("awk: array '" .. e.name .. "' used in scalar context")
-    end
+    if self.arrays[e.name] then error("awk: array '" .. e.name .. "' used in scalar context") end
     return self:get_var(e.name)
   end
   if k == "group" then return self:eval(e.expr) end
@@ -950,9 +1083,7 @@ function Interp:eval(e)
   if k == "index" then
     self.arrays[e.arr] = self.arrays[e.arr] or {}
     local key = self:eval_key(e.key)
-    if self.arrays[e.arr][key] == nil then
-      self.arrays[e.arr][key] = ""
-    end
+    if self.arrays[e.arr][key] == nil then self.arrays[e.arr][key] = "" end
     return self.arrays[e.arr][key]
   end
   if k == "binary" then return self:eval_binary(e) end
@@ -968,10 +1099,7 @@ function Interp:eval(e)
     self:assign_lvalue(e.target, num_value(new))
     return num_value(e.post and cur or new)
   end
-  if k == "concat" then
-    return to_str(self:eval(e.a), self.OFMT)
-      .. to_str(self:eval(e.b), self.OFMT)
-  end
+  if k == "concat" then return to_str(self:eval(e.a), self.OFMT) .. to_str(self:eval(e.b), self.OFMT) end
   if k == "match" then
     local s = to_str(self:eval(e.expr), self.OFMT)
     local pat = self:regex_pattern(e.regex)
@@ -985,8 +1113,11 @@ function Interp:eval(e)
     return (self.arrays[e.arr][key] ~= nil) and 1 or 0
   end
   if k == "cond" then
-    if to_bool(self:eval(e.c)) then return self:eval(e.t)
-    else return self:eval(e.f) end
+    if to_bool(self:eval(e.c)) then
+      return self:eval(e.t)
+    else
+      return self:eval(e.f)
+    end
   end
   if k == "assign" then return self:eval_assign(e) end
   if k == "call" then return self:call_builtin(e.name, e.args) end
@@ -1023,8 +1154,7 @@ function Interp:eval_binary(e)
     return to_num(a) - d * math.floor(to_num(a) / d)
   end
   if op == "^" then return to_num(a) ^ to_num(b) end
-  if op == "==" or op == "!=" or op == "<" or op == "<="
-     or op == ">" or op == ">=" then
+  if op == "==" or op == "!=" or op == "<" or op == "<=" or op == ">" or op == ">=" then
     local cmp
     if is_numeric_value(a) and is_numeric_value(b) then
       local na, nb = to_num(a), to_num(b)
@@ -1035,22 +1165,18 @@ function Interp:eval_binary(e)
     end
     if op == "==" then return cmp == 0 and 1 or 0 end
     if op == "!=" then return cmp ~= 0 and 1 or 0 end
-    if op == "<"  then return cmp < 0  and 1 or 0 end
+    if op == "<" then return cmp < 0 and 1 or 0 end
     if op == "<=" then return cmp <= 0 and 1 or 0 end
-    if op == ">"  then return cmp > 0  and 1 or 0 end
+    if op == ">" then return cmp > 0 and 1 or 0 end
     if op == ">=" then return cmp >= 0 and 1 or 0 end
   end
-  if op == "CONCAT_SUBSEP" then
-    return to_str(a, self.OFMT) .. self.SUBSEP .. to_str(b, self.OFMT)
-  end
+  if op == "CONCAT_SUBSEP" then return to_str(a, self.OFMT) .. self.SUBSEP .. to_str(b, self.OFMT) end
   error("awk: bad binary op " .. tostring(op))
 end
 
 function Interp:assign_lvalue(node, value)
   if node.kind == "name" then
-    if self.arrays[node.name] then
-      error("awk: cannot assign scalar to array '" .. node.name .. "'")
-    end
+    if self.arrays[node.name] then error("awk: cannot assign scalar to array '" .. node.name .. "'") end
     self:set_var(node.name, value)
     return
   end
@@ -1076,9 +1202,12 @@ function Interp:eval_assign(e)
   end
   local cur = self:eval(e.target)
   local nv
-  if e.op == "+=" then nv = to_num(cur) + to_num(v)
-  elseif e.op == "-=" then nv = to_num(cur) - to_num(v)
-  elseif e.op == "*=" then nv = to_num(cur) * to_num(v)
+  if e.op == "+=" then
+    nv = to_num(cur) + to_num(v)
+  elseif e.op == "-=" then
+    nv = to_num(cur) - to_num(v)
+  elseif e.op == "*=" then
+    nv = to_num(cur) * to_num(v)
   elseif e.op == "/=" then
     local d = to_num(v)
     if d == 0 then error("awk: division by zero") end
@@ -1087,8 +1216,11 @@ function Interp:eval_assign(e)
     local d = to_num(v)
     if d == 0 then error("awk: division by zero") end
     nv = to_num(cur) - d * math.floor(to_num(cur) / d)
-  elseif e.op == "^=" then nv = to_num(cur) ^ to_num(v)
-  else error("awk: bad assign op " .. tostring(e.op)) end
+  elseif e.op == "^=" then
+    nv = to_num(cur) ^ to_num(v)
+  else
+    error("awk: bad assign op " .. tostring(e.op))
+  end
   local out = num_value(nv)
   self:assign_lvalue(e.target, out)
   return out
@@ -1101,7 +1233,9 @@ function Interp:call_builtin(name, arg_nodes)
     if #arg_nodes == 0 then return #self.fields[0] end
     if arg_nodes[1].kind == "name" and self.arrays[arg_nodes[1].name] then
       local count = 0
-      for _ in pairs(self.arrays[arg_nodes[1].name]) do count = count + 1 end
+      for _ in pairs(self.arrays[arg_nodes[1].name]) do
+        count = count + 1
+      end
       return count
     end
     return #to_str(self:eval(arg_nodes[1]), self.OFMT)
@@ -1131,9 +1265,7 @@ function Interp:call_builtin(name, arg_nodes)
   if name == "split" then
     if #arg_nodes < 2 or #arg_nodes > 3 then error("awk: split takes 2 or 3 args") end
     local s = to_str(self:eval(arg_nodes[1]), self.OFMT)
-    if arg_nodes[2].kind ~= "name" then
-      error("awk: split: second arg must be array name")
-    end
+    if arg_nodes[2].kind ~= "name" then error("awk: split: second arg must be array name") end
     local arr_name = arg_nodes[2].name
     self.arrays[arr_name] = {}
     local sep
@@ -1146,10 +1278,14 @@ function Interp:call_builtin(name, arg_nodes)
     local parts
     if sep == " " then
       parts = {}
-      for tok in s:gmatch("%S+") do parts[#parts + 1] = tok end
+      for tok in s:gmatch("%S+") do
+        parts[#parts + 1] = tok
+      end
     elseif sep == "" then
       parts = {}
-      for k = 1, #s do parts[#parts + 1] = s:sub(k, k) end
+      for k = 1, #s do
+        parts[#parts + 1] = s:sub(k, k)
+      end
     elseif #sep == 1 then
       parts = {}
       local start = 1
@@ -1181,9 +1317,7 @@ function Interp:call_builtin(name, arg_nodes)
     end
     return #parts
   end
-  if name == "sub" or name == "gsub" then
-    return self:sub_gsub(arg_nodes, name == "gsub")
-  end
+  if name == "sub" or name == "gsub" then return self:sub_gsub(arg_nodes, name == "gsub") end
   if name == "match" then
     if #arg_nodes ~= 2 then error("awk: match takes 2 args") end
     local s = to_str(self:eval(arg_nodes[1]), self.OFMT)
@@ -1199,17 +1333,15 @@ function Interp:call_builtin(name, arg_nodes)
     self.globals.RLENGTH = -1
     return 0
   end
-  if name == "toupper" then
-    return to_str(self:eval(arg_nodes[1]), self.OFMT):upper()
-  end
-  if name == "tolower" then
-    return to_str(self:eval(arg_nodes[1]), self.OFMT):lower()
-  end
+  if name == "toupper" then return to_str(self:eval(arg_nodes[1]), self.OFMT):upper() end
+  if name == "tolower" then return to_str(self:eval(arg_nodes[1]), self.OFMT):lower() end
   if name == "sprintf" then
     if #arg_nodes == 0 then error("awk: sprintf: missing format") end
     local fmt = to_str(self:eval(arg_nodes[1]), self.OFMT)
     local args = {}
-    for k = 2, #arg_nodes do args[#args + 1] = self:eval(arg_nodes[k]) end
+    for k = 2, #arg_nodes do
+      args[#args + 1] = self:eval(arg_nodes[k])
+    end
     return awk_printf(fmt, args, self.OFMT)
   end
   if name == "int" then
@@ -1257,8 +1389,11 @@ function Interp:sub_gsub(arg_nodes, all_matches)
   local pat = self:regex_pattern(arg_nodes[1])
   local repl = to_str(self:eval(arg_nodes[2]), self.OFMT)
   local target_node
-  if #arg_nodes == 3 then target_node = arg_nodes[3]
-  else target_node = { kind = "field", expr = { kind = "num", v = 0 } } end
+  if #arg_nodes == 3 then
+    target_node = arg_nodes[3]
+  else
+    target_node = { kind = "field", expr = { kind = "num", v = 0 } }
+  end
   local src = to_str(self:eval(target_node), self.OFMT)
   local ok, compiled = pcall(regex.compile, pat)
   if not ok then error("awk: bad regex '" .. pat .. "': " .. tostring(compiled)) end
@@ -1271,9 +1406,16 @@ function Interp:sub_gsub(arg_nodes, all_matches)
       local c = repl:sub(p, p)
       if c == "\\" and p + 1 <= #repl then
         local n = repl:sub(p + 1, p + 1)
-        if n == "&" then out[#out + 1] = "&"; p = p + 2
-        elseif n == "\\" then out[#out + 1] = "\\"; p = p + 2
-        else out[#out + 1] = n; p = p + 2 end
+        if n == "&" then
+          out[#out + 1] = "&"
+          p = p + 2
+        elseif n == "\\" then
+          out[#out + 1] = "\\"
+          p = p + 2
+        else
+          out[#out + 1] = n
+          p = p + 2
+        end
       elseif c == "&" then
         out[#out + 1] = m
         p = p + 1
@@ -1286,9 +1428,7 @@ function Interp:sub_gsub(arg_nodes, all_matches)
   end
 
   local new, count = compiled:gsub(src, awk_repl, all_matches and math.huge or 1)
-  if count > 0 then
-    self:assign_lvalue(target_node, new)
-  end
+  if count > 0 then self:assign_lvalue(target_node, new) end
   return count
 end
 
@@ -1312,13 +1452,20 @@ function Interp:exec(s)
     if #s.args == 0 then error("awk: printf: missing format") end
     local fmt = to_str(self:eval(s.args[1]), self.OFMT)
     local args = {}
-    for j = 2, #s.args do args[#args + 1] = self:eval(s.args[j]) end
+    for j = 2, #s.args do
+      args[#args + 1] = self:eval(s.args[j])
+    end
     io.stdout:write(awk_printf(fmt, args, self.OFMT))
     return
   end
-  if k == "expr" then self:eval(s.expr); return end
+  if k == "expr" then
+    self:eval(s.expr)
+    return
+  end
   if k == "block" then
-    for _, st in ipairs(s.stmts) do self:exec(st) end
+    for _, st in ipairs(s.stmts) do
+      self:exec(st)
+    end
     return
   end
   if k == "if" then
@@ -1364,7 +1511,9 @@ function Interp:exec(s)
   if k == "forin" then
     self.arrays[s.arr] = self.arrays[s.arr] or {}
     local keys = {}
-    for kk in pairs(self.arrays[s.arr]) do keys[#keys + 1] = kk end
+    for kk in pairs(self.arrays[s.arr]) do
+      keys[#keys + 1] = kk
+    end
     for _, kk in ipairs(keys) do
       self.globals[s.var] = kk
       local ok, err = pcall(self.exec, self, s.body)
@@ -1403,7 +1552,9 @@ end
 
 function Interp:exec_stmts(stmts)
   if not stmts then return end
-  for _, s in ipairs(stmts) do self:exec(s) end
+  for _, s in ipairs(stmts) do
+    self:exec(s)
+  end
 end
 
 function Interp:process_record(line)
@@ -1439,9 +1590,7 @@ function Interp:process_record(line)
             error(err)
           end
         end
-        if to_bool(self:eval(rule.pattern2)) then
-          self.range_active[idx] = false
-        end
+        if to_bool(self:eval(rule.pattern2)) then self.range_active[idx] = false end
       end
     end
   end
@@ -1483,7 +1632,9 @@ function Interp:process_input()
       local records
       if self.RS == "" then
         records = {}
-        for r in data:gmatch("([^\n]+)") do records[#records + 1] = r end
+        for r in data:gmatch("([^\n]+)") do
+          records[#records + 1] = r
+        end
       else
         records = {}
         local sep = self.RS
@@ -1496,12 +1647,16 @@ function Interp:process_input()
         end
         if start <= #data then records[#records + 1] = data:sub(start) end
       end
-      for _, rec in ipairs(records) do self:process_record(rec) end
+      for _, rec in ipairs(records) do
+        self:process_record(rec)
+      end
     end
     if close_it then fh:close() end
   end
 
-  for _, src in ipairs(sources) do process_one_source(src) end
+  for _, src in ipairs(sources) do
+    process_one_source(src)
+  end
 end
 
 function Interp:run()
@@ -1521,9 +1676,7 @@ function Interp:run()
   local ok, err = pcall(function()
     run_phase("BEGIN")
     if has_main or #self.files > 0 or has_end then
-      if has_main or #self.files > 0 then
-        self:process_input()
-      end
+      if has_main or #self.files > 0 then self:process_input() end
     end
     run_phase("END")
   end)
@@ -1532,7 +1685,9 @@ function Interp:run()
     if type(err) == "table" and err._exit then
       self.exit_code = err.code
       -- END still runs after exit
-      pcall(function() run_phase("END") end)
+      pcall(function()
+        run_phase("END")
+      end)
     else
       common.err(NAME, tostring(err))
       return 2
@@ -1555,7 +1710,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local fs = nil
   local preset = {}
@@ -1566,7 +1723,9 @@ local function main(argv)
   while i <= #args do
     local a = args[i]
     if a == "--" then
-      for j = i + 1, #args do files[#files + 1] = args[j] end
+      for j = i + 1, #args do
+        files[#files + 1] = args[j]
+      end
       break
     elseif a == "-F" then
       i = i + 1
@@ -1574,9 +1733,11 @@ local function main(argv)
         common.err(NAME, "-F requires an argument")
         return 2
       end
-      fs = args[i]; i = i + 1
+      fs = args[i]
+      i = i + 1
     elseif a:sub(1, 2) == "-F" and #a > 2 then
-      fs = a:sub(3); i = i + 1
+      fs = a:sub(3)
+      i = i + 1
     elseif a == "-v" then
       i = i + 1
       if not args[i] or not args[i]:find("=", 1, true) then
@@ -1605,7 +1766,8 @@ local function main(argv)
       program_parts[#program_parts + 1] = data
       i = i + 1
     elseif a == "-" then
-      files[#files + 1] = "-"; i = i + 1
+      files[#files + 1] = "-"
+      i = i + 1
     elseif a:sub(1, 1) == "-" and a ~= "-" and #a > 1 then
       common.err(NAME, "unknown option: " .. a)
       return 2

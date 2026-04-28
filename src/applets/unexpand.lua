@@ -9,9 +9,7 @@ local function parse_tabs(spec)
   local out = {}
   for p in clean:gmatch("[^,]+") do
     local n = common.parse_int(p)
-    if not n then
-      return nil
-    end
+    if not n then return nil end
     out[#out + 1] = n
   end
   return out
@@ -32,9 +30,7 @@ local function compact_spaces(start_col, count, tabs, step)
           break
         end
       end
-      if not next_stop then
-        next_stop = col + remaining
-      end
+      if not next_stop then next_stop = col + remaining end
     end
     local gap = next_stop - col
     if gap <= remaining then
@@ -73,9 +69,7 @@ local function convert_line(line, tabs, step, all_blanks)
       end
       out[#out + 1] = ch
       col = col + 1
-      if ch ~= "\t" then
-        seen_non_blank = true
-      end
+      if ch ~= "\t" then seen_non_blank = true end
       if ch == "\t" then
         if step > 0 then
           col = col - 1
@@ -157,9 +151,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
   local rc = 0
   local step = #tabs == 1 and tabs[1] or 0
 
@@ -180,9 +172,7 @@ local function main(argv)
         end
         io.stdout:write(convert_line(body, tabs, step, all_blanks), trailing)
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()

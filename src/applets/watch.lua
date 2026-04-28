@@ -23,12 +23,8 @@ local function format_now()
 end
 
 local function shell_quote(s)
-  if common.is_windows() then
-    return '"' .. s:gsub('"', '\\"') .. '"'
-  end
-  if s:match("^[%w@%%+=:,./-]+$") then
-    return s
-  end
+  if common.is_windows() then return '"' .. s:gsub('"', '\\"') .. '"' end
+  if s:match("^[%w@%%+=:,./-]+$") then return s end
   return "'" .. s:gsub("'", "'\\''") .. "'"
 end
 
@@ -39,7 +35,9 @@ local function run_capture(cmd_args, exec_via_shell)
     cmdline = cmd_args[1]
   else
     local parts = {}
-    for i = 1, #cmd_args do parts[i] = shell_quote(cmd_args[i]) end
+    for i = 1, #cmd_args do
+      parts[i] = shell_quote(cmd_args[i])
+    end
     cmdline = table.concat(parts, " ")
   end
   -- Merge stderr into stdout. Lua's io.popen only captures stdout;
@@ -51,9 +49,7 @@ local function run_capture(cmd_args, exec_via_shell)
     merged = cmdline .. " 2>&1"
   end
   local p = io.popen(merged, "r")
-  if not p then
-    return "watch: command failed to start\n", false
-  end
+  if not p then return "watch: command failed to start\n", false end
   local out = p:read("*a") or ""
   p:close()
   return out, true
@@ -78,8 +74,7 @@ end
 local function sleep_seconds(secs)
   if secs <= 0 then return end
   if common.is_windows() then
-    os.execute(string.format("powershell -NoProfile -Command \"Start-Sleep -Milliseconds %d\"",
-      math.floor(secs * 1000)))
+    os.execute(string.format('powershell -NoProfile -Command "Start-Sleep -Milliseconds %d"', math.floor(secs * 1000)))
   else
     os.execute(string.format("sleep %g", secs))
   end
@@ -87,7 +82,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local interval = 2.0
   local no_title = false
@@ -95,7 +92,7 @@ local function main(argv)
   local exit_on_change = false
   local beep_on_change = false
   local precise = false
-  local max_cycles = nil  -- test hook
+  local max_cycles = nil -- test hook
 
   local i = 1
   while i <= #args do
@@ -119,15 +116,20 @@ local function main(argv)
       interval = n
       i = i + 1
     elseif a == "-t" or a == "--no-title" then
-      no_title = true; i = i + 1
+      no_title = true
+      i = i + 1
     elseif a == "-x" or a == "--exec" then
-      exec_via_shell = false; i = i + 1
+      exec_via_shell = false
+      i = i + 1
     elseif a == "-g" or a == "--chgexit" then
-      exit_on_change = true; i = i + 1
+      exit_on_change = true
+      i = i + 1
     elseif a == "-b" or a == "--beep" then
-      beep_on_change = true; i = i + 1
+      beep_on_change = true
+      i = i + 1
     elseif a == "-p" or a == "--precise" then
-      precise = true; i = i + 1
+      precise = true
+      i = i + 1
     elseif a == "--max-cycles" and args[i + 1] then
       max_cycles = tonumber(args[i + 1])
       i = i + 2
@@ -143,7 +145,9 @@ local function main(argv)
   end
 
   local cmd = {}
-  for j = i, #args do cmd[#cmd + 1] = args[j] end
+  for j = i, #args do
+    cmd[#cmd + 1] = args[j]
+  end
   if #cmd == 0 then
     common.err(NAME, "no command given")
     return 2
@@ -168,9 +172,7 @@ local function main(argv)
       local gap = math.max(1, cols - #left - #right)
       if #left + gap + #right > cols then
         local cap = cols - #right - 4
-        if cap > 0 then
-          left = left:sub(1, cap) .. "..."
-        end
+        if cap > 0 then left = left:sub(1, cap) .. "..." end
         gap = math.max(1, cols - #left - #right)
       end
       io.stdout:write(left, string.rep(" ", gap), right, "\n\n")
@@ -187,9 +189,7 @@ local function main(argv)
     end
     last_output = output
 
-    if max_cycles and cycle >= max_cycles then
-      return 0
-    end
+    if max_cycles and cycle >= max_cycles then return 0 end
 
     local elapsed = os.difftime(os.time(), cycle_start)
     local nap = interval - (precise and elapsed or 0)

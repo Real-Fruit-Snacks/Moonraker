@@ -44,9 +44,24 @@ describe("registry", function()
   end)
 
   it("iterates in alphabetical order", function()
-    registry.register({ name = "z", main = function() return 0 end })
-    registry.register({ name = "a", main = function() return 0 end })
-    registry.register({ name = "m", main = function() return 0 end })
+    registry.register({
+      name = "z",
+      main = function()
+        return 0
+      end,
+    })
+    registry.register({
+      name = "a",
+      main = function()
+        return 0
+      end,
+    })
+    registry.register({
+      name = "m",
+      main = function()
+        return 0
+      end,
+    })
     local names = {}
     for _, a in registry.iter_sorted() do
       names[#names + 1] = a.name
@@ -58,7 +73,9 @@ describe("registry", function()
     registry.register({
       name = "x",
       aliases = { "y", "z" },
-      main = function() return 0 end,
+      main = function()
+        return 0
+      end,
     })
     assert.equal(1, registry.count())
   end)

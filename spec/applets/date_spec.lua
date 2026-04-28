@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("date applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("default prints a date string", function()
     local rc, out = helpers.invoke_multicall("date")

@@ -25,13 +25,9 @@ local function emit_numbered(files, number_all, number_nonblank)
         else
           io.stdout:write(body)
         end
-        if ends_nl then
-          io.stdout:write("\n")
-        end
+        if ends_nl then io.stdout:write("\n") end
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   return rc
@@ -73,13 +69,9 @@ local function main(argv)
     i = i + 1
   end
 
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
-  if number_all or number_nonblank then
-    return emit_numbered(files, number_all, number_nonblank)
-  end
+  if number_all or number_nonblank then return emit_numbered(files, number_all, number_nonblank) end
 
   local rc = 0
   for _, f in ipairs(files) do
@@ -90,14 +82,10 @@ local function main(argv)
     else
       while true do
         local chunk = fh:read(CHUNK)
-        if not chunk or chunk == "" then
-          break
-        end
+        if not chunk or chunk == "" then break end
         io.stdout:write(chunk)
       end
-      if f ~= "-" then
-        fh:close()
-      end
+      if f ~= "-" then fh:close() end
     end
   end
   io.stdout:flush()

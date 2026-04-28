@@ -37,9 +37,7 @@ local function make_input(text)
       return rest
     end
     if fmt == "*l" or fmt == "l" or fmt == "*L" or fmt == "L" then
-      if pos > #text then
-        return nil
-      end
+      if pos > #text then return nil end
       local nl = text:find("\n", pos, true)
       local line
       if nl then
@@ -52,9 +50,7 @@ local function make_input(text)
       return line
     end
     if type(fmt) == "number" then
-      if pos > #text then
-        return nil
-      end
+      if pos > #text then return nil end
       local chunk = text:sub(pos, pos + fmt - 1)
       pos = pos + #chunk
       return chunk
@@ -65,9 +61,7 @@ local function make_input(text)
   local _unpack = table.unpack or unpack -- luacheck: globals unpack
   function h:lines(...)
     local fmts = { ... }
-    if #fmts == 0 then
-      fmts = { "*l" }
-    end
+    if #fmts == 0 then fmts = { "*l" } end
     return function()
       return self:read(_unpack(fmts))
     end
@@ -86,17 +80,13 @@ function M.invoke(argv, stdin_text)
   local orig_out, orig_err, orig_in = io.stdout, io.stderr, io.stdin
   io.stdout = out
   io.stderr = err
-  if stdin_text ~= nil then
-    io.stdin = make_input(stdin_text)
-  end
+  if stdin_text ~= nil then io.stdin = make_input(stdin_text) end
   local ok, rc_or_err = pcall(cli.main, argv)
   io.stdout = orig_out
   io.stderr = orig_err
   io.stdin = orig_in
 
-  if not ok then
-    error(rc_or_err)
-  end
+  if not ok then error(rc_or_err) end
   return rc_or_err, out:value(), err:value()
 end
 
@@ -136,17 +126,9 @@ function M.tmp_file(content)
   local lfs = require("lfs")
   local dir = os.getenv("TMPDIR") or os.getenv("TEMP") or "/tmp"
   local sep = package.config:sub(1, 1)
-  local name = string.format(
-    "%s%smr-spec-%d-%d.tmp",
-    dir,
-    sep,
-    os.time(),
-    math.random(1, 1000000)
-  )
+  local name = string.format("%s%smr-spec-%d-%d.tmp", dir, sep, os.time(), math.random(1, 1000000))
   local f = assert(io.open(name, "wb"))
-  if content then
-    f:write(content)
-  end
+  if content then f:write(content) end
   f:close()
   -- Touch lfs to prove it's available (and to satisfy luacheck about unused).
   local _ = lfs.attributes(name)
@@ -156,9 +138,7 @@ end
 --- Read a file's full contents. Returns the string, or "" if missing.
 function M.read_file(path)
   local f = io.open(path, "rb")
-  if not f then
-    return ""
-  end
+  if not f then return "" end
   local data = f:read("*a") or ""
   f:close()
   return data
@@ -169,9 +149,7 @@ end
 function M.load_applets()
   package.loaded["registry"] = nil
   for k in pairs(package.loaded) do
-    if k:match("^applets") then
-      package.loaded[k] = nil
-    end
+    if k:match("^applets") then package.loaded[k] = nil end
   end
   package.loaded["cli"] = nil
   package.loaded["usage"] = nil

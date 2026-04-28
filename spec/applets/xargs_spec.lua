@@ -7,7 +7,9 @@ local helpers = require("helpers")
 -- verify exit codes and parsing only.
 
 describe("xargs applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("returns 0 on simple input", function()
     local rc = helpers.invoke_with_stdin("xargs", "a b c\n")

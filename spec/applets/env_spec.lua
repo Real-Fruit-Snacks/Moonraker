@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("env applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("prints environment when no command given", function()
     local rc, out = helpers.invoke_multicall("env")

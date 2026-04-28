@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("expand applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("converts tabs to spaces (default 8)", function()
     local _, out = helpers.invoke_with_stdin("expand", "a\tb\n")

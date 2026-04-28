@@ -27,19 +27,15 @@ local DEVNULL = IS_WINDOWS and "nul" or "/dev/null"
 local function resolve_exe(name)
   local cmd
   if IS_WINDOWS then
-    cmd = string.format('where %s 2>%s', name, DEVNULL)
+    cmd = string.format("where %s 2>%s", name, DEVNULL)
   else
-    cmd = string.format('command -v %s 2>%s', name, DEVNULL)
+    cmd = string.format("command -v %s 2>%s", name, DEVNULL)
   end
   local p = io.popen(cmd)
-  if not p then
-    return nil
-  end
+  if not p then return nil end
   local line = p:read("*l")
   p:close()
-  if line and line ~= "" then
-    return line
-  end
+  if line and line ~= "" then return line end
   return nil
 end
 
@@ -48,17 +44,11 @@ end
 -- does inside its own bin shims (e.g. busted.bat). Without this,
 -- `lua build.lua` from a plain shell can't see rocks-installed modules.
 local function ensure_luarocks_paths()
-  if pcall(require, "lfs") then
-    return
-  end
+  if pcall(require, "lfs") then return end
   local lr = resolve_exe("luarocks")
-  if not lr then
-    return
-  end
+  if not lr then return end
   local p = io.popen(string.format('"%s" path 2>&1', lr))
-  if not p then
-    return
-  end
+  if not p then return end
   local out = p:read("*a")
   p:close()
   for line in out:gmatch("[^\r\n]+") do
@@ -114,14 +104,10 @@ local function listdir(path)
     cmd = string.format('ls -1 "%s" 2>/dev/null', path)
   end
   local p = io.popen(cmd)
-  if not p then
-    return {}
-  end
+  if not p then return {} end
   local out = {}
   for line in p:lines() do
-    if line ~= "" then
-      out[#out + 1] = line
-    end
+    if line ~= "" then out[#out + 1] = line end
   end
   p:close()
   return out
@@ -131,9 +117,7 @@ local function discover_applets()
   local names = {}
   for _, fname in ipairs(listdir("src/applets")) do
     local n = fname:match("^(.+)%.lua$")
-    if n and n ~= "init" then
-      names[#names + 1] = n
-    end
+    if n and n ~= "init" then names[#names + 1] = n end
   end
   table.sort(names)
   return names
@@ -183,9 +167,7 @@ Options:
     i = i + 1
   end
 
-  if opts.output == nil then
-    opts.output = is_windows() and "dist/moonraker.exe" or "dist/moonraker"
-  end
+  if opts.output == nil then opts.output = is_windows() and "dist/moonraker.exe" or "dist/moonraker" end
   return opts
 end
 
@@ -194,15 +176,11 @@ local function select_applets(opts, all)
     local out = {}
     for name in opts.applets:gmatch("[^,]+") do
       local trimmed = name:match("^%s*(.-)%s*$")
-      if trimmed ~= "" then
-        out[#out + 1] = trimmed
-      end
+      if trimmed ~= "" then out[#out + 1] = trimmed end
     end
     return out
   end
-  if opts.preset == "minimal" then
-    return PRESETS.minimal
-  end
+  if opts.preset == "minimal" then return PRESETS.minimal end
   if opts.preset == nil or opts.preset == "full" or opts.preset == "slim" then
     -- slim is identical to full until Phase 5 onward; refined later.
     return all
@@ -237,16 +215,10 @@ local function generate_manifest(applets)
 end
 
 local function ensure_dir(path)
-  if path == nil or path == "" or path == "." then
-    return
-  end
+  if path == nil or path == "" or path == "." then return end
   local cmd
   if is_windows() then
-    cmd = string.format(
-      'if not exist "%s" mkdir "%s" >nul 2>nul',
-      path:gsub("/", "\\"),
-      path:gsub("/", "\\")
-    )
+    cmd = string.format('if not exist "%s" mkdir "%s" >nul 2>nul', path:gsub("/", "\\"), path:gsub("/", "\\"))
   else
     cmd = string.format('mkdir -p "%s"', path)
   end
@@ -264,14 +236,10 @@ end
 --- Run a command and capture its first stdout line. Returns nil on failure.
 local function shellout_line(cmd)
   local p = io.popen(cmd)
-  if not p then
-    return nil
-  end
+  if not p then return nil end
   local line = p:read("*l")
   p:close()
-  if line and line ~= "" then
-    return line
-  end
+  if line and line ~= "" then return line end
   return nil
 end
 
@@ -280,9 +248,7 @@ end
 --- where Lua is installed.
 local function luarocks_var(key)
   local lr = resolve_exe("luarocks")
-  if not lr then
-    return nil
-  end
+  if not lr then return nil end
   local out = shellout_line(string.format('"%s" config variables.%s 2>%s', lr, key, DEVNULL))
   return out
 end
@@ -291,19 +257,13 @@ end
 --- (not full paths). Caller is responsible for joining.
 local function list_subdirs(parent)
   local lfs_ok, lfs_mod = pcall(require, "lfs")
-  if not lfs_ok then
-    return {}
-  end
-  if not lfs_mod.attributes(parent) then
-    return {}
-  end
+  if not lfs_ok then return {} end
+  if not lfs_mod.attributes(parent) then return {} end
   local out = {}
   for entry in lfs_mod.dir(parent) do
     if entry ~= "." and entry ~= ".." then
       local attr = lfs_mod.attributes(parent .. "/" .. entry)
-      if attr and attr.mode == "directory" then
-        out[#out + 1] = entry
-      end
+      if attr and attr.mode == "directory" then out[#out + 1] = entry end
     end
   end
   table.sort(out)
@@ -312,9 +272,7 @@ end
 
 local function build(opts, applets)
   generate_manifest(applets)
-  if opts.regen_only then
-    return
-  end
+  if opts.regen_only then return end
 
   -- luastatic derives module names from input paths (slashes → dots, .lua
   -- stripped). To get `require("applets.echo")` to resolve, the paths must
@@ -344,15 +302,11 @@ local function build(opts, applets)
   -- Vendored pure-Lua deps in src/vendor/ get bundled too. luastatic will
   -- expose them as `require("vendor.<name>")`.
   for _, fname in ipairs(listdir("src/vendor")) do
-    if fname:sub(-4) == ".lua" then
-      sources[#sources + 1] = "vendor/" .. fname
-    end
+    if fname:sub(-4) == ".lua" then sources[#sources + 1] = "vendor/" .. fname end
   end
 
   for _, src in ipairs(sources) do
-    if not exists("src/" .. src) then
-      die("missing source: src/" .. src)
-    end
+    if not exists("src/" .. src) then die("missing source: src/" .. src) end
   end
 
   ensure_dir(opts.output:match("^(.*)[\\/]") or ".")
@@ -398,27 +352,18 @@ local function build(opts, applets)
       libdir .. sep .. "liblua" .. v_no_dot .. ".a",
     }
     for _, c in ipairs(candidates) do
-      if exists(c) then
-        return c
-      end
+      if exists(c) then return c end
     end
     return nil, candidates
   end
 
   local liblua_a, candidates = find_liblua(lua_libdir)
   if not liblua_a then
-    die(
-      "could not find liblua static archive in "
-        .. lua_libdir
-        .. ". Tried: "
-        .. table.concat(candidates, ", ")
-    )
+    die("could not find liblua static archive in " .. lua_libdir .. ". Tried: " .. table.concat(candidates, ", "))
   end
 
   local ok, lfs = pcall(require, "lfs")
-  if not ok then
-    die("luafilesystem not installed. Install with: luarocks install luafilesystem")
-  end
+  if not ok then die("luafilesystem not installed. Install with: luarocks install luafilesystem") end
 
   -- Compile any C dependencies in src/cdeps/<lib>/ to object files. Each
   -- .o file gets passed to luastatic afterwards; luastatic detects
@@ -450,7 +395,12 @@ local function build(opts, applets)
         local obj_path = lib_dir .. "/" .. fname:sub(1, -3) .. ".o"
         local compile = string.format(
           '"%s" -c -O2 -I"%s" -I"%s"%s "%s" -o "%s"',
-          cc, lua_incdir, lib_dir, extra_cflags, src_path, obj_path
+          cc,
+          lua_incdir,
+          lib_dir,
+          extra_cflags,
+          src_path,
+          obj_path
         )
         shell(compile)
         -- After chdir into src/ below, paths must be relative to src/.
@@ -462,18 +412,12 @@ local function build(opts, applets)
   local original_dir = lfs.currentdir()
   local luastatic_rel = is_windows() and "\\scripts\\luastatic.lua" or "/scripts/luastatic.lua"
   local luastatic_script = original_dir .. luastatic_rel
-  if not exists(luastatic_script) then
-    die("vendored luastatic script not found at " .. luastatic_script)
-  end
+  if not exists(luastatic_script) then die("vendored luastatic script not found at " .. luastatic_script) end
   local lua_exe = resolve_exe("lua")
-  if not lua_exe then
-    die("lua executable not found on PATH")
-  end
+  if not lua_exe then die("lua executable not found on PATH") end
 
   local chdir_ok, chdir_err = lfs.chdir("src")
-  if not chdir_ok then
-    die("cannot chdir to src: " .. tostring(chdir_err))
-  end
+  if not chdir_ok then die("cannot chdir to src: " .. tostring(chdir_err)) end
 
   local cflags = os.getenv("CFLAGS") or ""
   local ldflags = os.getenv("LDFLAGS") or ""
@@ -490,9 +434,7 @@ local function build(opts, applets)
   end
 
   local objs = ""
-  if #cdep_objects > 0 then
-    objs = " " .. table.concat(cdep_objects, " ")
-  end
+  if #cdep_objects > 0 then objs = " " .. table.concat(cdep_objects, " ") end
 
   local cmd = string.format(
     '%s"%s" "%s" %s%s "%s" -I"%s"',
@@ -504,12 +446,8 @@ local function build(opts, applets)
     liblua_a,
     lua_incdir
   )
-  if cflags ~= "" then
-    cmd = cmd .. " " .. cflags
-  end
-  if ldflags ~= "" then
-    cmd = cmd .. " " .. ldflags
-  end
+  if cflags ~= "" then cmd = cmd .. " " .. cflags end
+  if ldflags ~= "" then cmd = cmd .. " " .. ldflags end
   shell(cmd)
 
   -- Restore CWD before any post-build actions so relative paths in opts
@@ -517,22 +455,14 @@ local function build(opts, applets)
   lfs.chdir(original_dir)
 
   local emitted = is_windows() and "src/main.exe" or "src/main"
-  if not exists(emitted) then
-    die("luastatic did not produce expected output: " .. emitted)
-  end
+  if not exists(emitted) then die("luastatic did not produce expected output: " .. emitted) end
 
   local dst = opts.output
-  if is_windows() and not dst:match("%.exe$") then
-    dst = dst .. ".exe"
-  end
+  if is_windows() and not dst:match("%.exe$") then dst = dst .. ".exe" end
 
   local mv
   if is_windows() then
-    mv = string.format(
-      'move /Y "%s" "%s" >nul',
-      emitted:gsub("/", "\\"),
-      dst:gsub("/", "\\")
-    )
+    mv = string.format('move /Y "%s" "%s" >nul', emitted:gsub("/", "\\"), dst:gsub("/", "\\"))
   else
     mv = string.format('mv -f "%s" "%s"', emitted, dst)
   end

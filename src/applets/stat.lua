@@ -23,12 +23,18 @@ local function filemode(attr)
   -- the type letter.
   local type_char = "-"
   local m = attr.mode
-  if m == "directory" then type_char = "d"
-  elseif m == "link" then type_char = "l"
-  elseif m == "char device" then type_char = "c"
-  elseif m == "block device" then type_char = "b"
-  elseif m == "named pipe" then type_char = "p"
-  elseif m == "socket" then type_char = "s"
+  if m == "directory" then
+    type_char = "d"
+  elseif m == "link" then
+    type_char = "l"
+  elseif m == "char device" then
+    type_char = "c"
+  elseif m == "block device" then
+    type_char = "b"
+  elseif m == "named pipe" then
+    type_char = "p"
+  elseif m == "socket" then
+    type_char = "s"
   end
   return type_char .. (attr.permissions or "?????????")
 end
@@ -43,9 +49,15 @@ local function permissions_octal(attr)
   local function bit(c, b)
     return (p:sub(c, c) ~= "-") and b or 0
   end
-  return bit(1, 256) + bit(2, 128) + bit(3, 64)
-       + bit(4, 32) + bit(5, 16) + bit(6, 8)
-       + bit(7, 4) + bit(8, 2) + bit(9, 1)
+  return bit(1, 256)
+    + bit(2, 128)
+    + bit(3, 64)
+    + bit(4, 32)
+    + bit(5, 16)
+    + bit(6, 8)
+    + bit(7, 4)
+    + bit(8, 2)
+    + bit(9, 1)
 end
 
 local function default_output(path, attr)
@@ -55,8 +67,7 @@ local function default_output(path, attr)
   local lines = {
     string.format("  File: %s", path),
     string.format("  Size: %-12d  Type: %s", size, type_string(attr)),
-    string.format("  Mode: (%04o/%s)  Uid: (%4d)  Gid: (%4d)",
-      mode_oct, mode_str, attr.uid or 0, attr.gid or 0),
+    string.format("  Mode: (%04o/%s)  Uid: (%4d)  Gid: (%4d)", mode_oct, mode_str, attr.uid or 0, attr.gid or 0),
     string.format("Access: %s", format_time(attr.access or 0)),
     string.format("Modify: %s", format_time(attr.modification or 0)),
     string.format("Change: %s", format_time(attr.change or 0)),
@@ -180,13 +191,20 @@ local function main(argv)
       if fmt then
         io.stdout:write(apply_format(path, attr, fmt), "\n")
       elseif terse then
-        io.stdout:write(string.format("%s %d %d %o %d %d %d %d %d\n",
-          path, attr.size or 0, attr.nlink or 0,
-          permissions_octal(attr), attr.uid or 0, attr.gid or 0,
-          math.floor(attr.modification or 0),
-          math.floor(attr.access or 0),
-          math.floor(attr.change or 0)
-        ))
+        io.stdout:write(
+          string.format(
+            "%s %d %d %o %d %d %d %d %d\n",
+            path,
+            attr.size or 0,
+            attr.nlink or 0,
+            permissions_octal(attr),
+            attr.uid or 0,
+            attr.gid or 0,
+            math.floor(attr.modification or 0),
+            math.floor(attr.access or 0),
+            math.floor(attr.change or 0)
+          )
+        )
       else
         io.stdout:write(default_output(path, attr), "\n")
       end

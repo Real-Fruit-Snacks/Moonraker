@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("fold applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("wraps at default width 80", function()
     local _, out = helpers.invoke_with_stdin("fold", string.rep("a", 100) .. "\n")

@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("which applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("locates a common command", function()
     local rc, out = helpers.invoke_multicall("which", "sh")

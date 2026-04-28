@@ -12,7 +12,9 @@ local function main(argv)
   end
 
   local users = {}
-  for i = 1, #argv do users[i] = argv[i] end
+  for i = 1, #argv do
+    users[i] = argv[i]
+  end
 
   local cmd = "groups"
   if #users > 0 then

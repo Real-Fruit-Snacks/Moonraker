@@ -59,7 +59,10 @@ local function file_exists(path)
   local lfs = common.try_lfs()
   if lfs then return lfs.symlinkattributes(path) ~= nil end
   local fh = io.open(path, "rb")
-  if fh then fh:close(); return true end
+  if fh then
+    fh:close()
+    return true
+  end
   return false
 end
 
@@ -76,14 +79,11 @@ local function create_link(source, target)
   -- Fall back to copy via shell
   local cp_cmd
   if common.is_windows() then
-    cp_cmd = string.format('copy /Y "%s" "%s" >nul',
-      source:gsub("/", "\\"), target:gsub("/", "\\"))
+    cp_cmd = string.format('copy /Y "%s" "%s" >nul', source:gsub("/", "\\"), target:gsub("/", "\\"))
   else
     cp_cmd = string.format('cp "%s" "%s"', source, target)
   end
-  if os.execute(cp_cmd) == true or os.execute(cp_cmd) == 0 then
-    return "copy"
-  end
+  if os.execute(cp_cmd) == true or os.execute(cp_cmd) == 0 then return "copy" end
   return nil
 end
 
@@ -100,7 +100,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local target_dir = nil
   local include_aliases = false
@@ -112,12 +114,21 @@ local function main(argv)
   local i = 1
   while i <= #args do
     local a = args[i]
-    if a == "--aliases" then include_aliases = true; i = i + 1
-    elseif a == "--all" then include_all = true; i = i + 1
+    if a == "--aliases" then
+      include_aliases = true
+      i = i + 1
+    elseif a == "--all" then
+      include_all = true
+      i = i + 1
     elseif a == "-n" or a == "--dry-run" or a == "--check" then
-      dry_run = true; i = i + 1
-    elseif a == "-f" or a == "--force" then force = true; i = i + 1
-    elseif a == "-q" or a == "--quiet" then quiet = true; i = i + 1
+      dry_run = true
+      i = i + 1
+    elseif a == "-f" or a == "--force" then
+      force = true
+      i = i + 1
+    elseif a == "-q" or a == "--quiet" then
+      quiet = true
+      i = i + 1
     elseif a:sub(1, 1) == "-" and a ~= "-" and #a > 1 then
       common.err(NAME, "unknown option: " .. a)
       return 2
@@ -135,8 +146,7 @@ local function main(argv)
 
   local self_path = running_binary_path()
   if not self_path then
-    common.err(NAME, "could not locate the moonraker binary; "
-      .. "make sure it's on PATH")
+    common.err(NAME, "could not locate the moonraker binary; " .. "make sure it's on PATH")
     return 2
   end
 
@@ -168,9 +178,7 @@ local function main(argv)
   end
 
   local suffix = ""
-  if common.is_windows() and self_path:sub(-4):lower() == ".exe" then
-    suffix = ".exe"
-  end
+  if common.is_windows() and self_path:sub(-4):lower() == ".exe" then suffix = ".exe" end
 
   local created, skipped, failed = 0, 0, 0
   local methods = {}
@@ -180,8 +188,7 @@ local function main(argv)
     if file_exists(link) then
       if not force then
         if not quiet then
-          io.stdout:write(string.format(
-            "skip   %-14s  (exists; pass --force to overwrite)\n", name))
+          io.stdout:write(string.format("skip   %-14s  (exists; pass --force to overwrite)\n", name))
         end
         skipped = skipped + 1
       else
@@ -196,9 +203,7 @@ local function main(argv)
     end
     if not file_exists(link) or force then
       if dry_run then
-        if not quiet then
-          io.stdout:write(string.format("would  %-14s  -> %s\n", name, link))
-        end
+        if not quiet then io.stdout:write(string.format("would  %-14s  -> %s\n", name, link)) end
         created = created + 1
       else
         local method = create_link(self_path, link)
@@ -208,9 +213,7 @@ local function main(argv)
         else
           methods[method] = (methods[method] or 0) + 1
           created = created + 1
-          if not quiet then
-            io.stdout:write(string.format("%-8s %-14s  -> %s\n", method, name, link))
-          end
+          if not quiet then io.stdout:write(string.format("%-8s %-14s  -> %s\n", method, name, link)) end
         end
       end
     end
@@ -226,8 +229,9 @@ local function main(argv)
         parts[#parts + 1] = string.format("%s=%d", k, v)
       end
       table.sort(parts)
-      io.stdout:write(string.format("created %d (%s), skipped %d, failed %d\n",
-        created, table.concat(parts, ", "), skipped, failed))
+      io.stdout:write(
+        string.format("created %d (%s), skipped %d, failed %d\n", created, table.concat(parts, ", "), skipped, failed)
+      )
     end
   end
 

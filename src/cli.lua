@@ -25,8 +25,7 @@ local function program_stem(argv0)
 end
 
 local function print_top_help(out)
-  out:write(string.format("moonraker %s - cross-platform multi-call utility binary\n",
-    version.version))
+  out:write(string.format("moonraker %s - cross-platform multi-call utility binary\n", version.version))
   out:write("\n")
   out:write("Usage:\n")
   out:write("  moonraker <applet> [args...]\n")
@@ -44,13 +43,9 @@ local function print_applet_help(applet, out)
   local body = usage[applet.name]
   if body and body ~= "" then
     out:write("\n", body)
-    if body:sub(-1) ~= "\n" then
-      out:write("\n")
-    end
+    if body:sub(-1) ~= "\n" then out:write("\n") end
   end
-  if #applet.aliases > 0 then
-    out:write("\nAliases: ", table.concat(applet.aliases, ", "), "\n")
-  end
+  if #applet.aliases > 0 then out:write("\nAliases: ", table.concat(applet.aliases, ", "), "\n") end
 end
 
 local function print_list(out)
@@ -58,16 +53,12 @@ local function print_list(out)
   local width = 0
   for _, a in registry.iter_sorted() do
     names[#names + 1] = a
-    if #a.name > width then
-      width = #a.name
-    end
+    if #a.name > width then width = #a.name end
   end
   for _, a in ipairs(names) do
     local pad = string.rep(" ", width - #a.name)
     local suffix = ""
-    if #a.aliases > 0 then
-      suffix = string.format("  (aliases: %s)", table.concat(a.aliases, ", "))
-    end
+    if #a.aliases > 0 then suffix = string.format("  (aliases: %s)", table.concat(a.aliases, ", ")) end
     out:write("  ", a.name, pad, "  ", a.help, suffix, "\n")
   end
 end

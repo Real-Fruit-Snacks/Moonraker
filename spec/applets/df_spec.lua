@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("df applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("emits a header and a row for current dir", function()
     local rc, out = helpers.invoke_multicall("df", ".")

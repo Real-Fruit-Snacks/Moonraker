@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("install-aliases applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("--dry-run produces preview", function()
     -- Dry run shouldn't write anywhere; binary location detection might

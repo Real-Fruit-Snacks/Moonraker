@@ -7,18 +7,14 @@ local NAME = "hostname"
 local function read_hostname()
   -- Try $HOSTNAME first (set by most shells), then `hostname` / `uname -n`.
   local env = os.getenv("HOSTNAME") or os.getenv("COMPUTERNAME")
-  if env and env ~= "" then
-    return env
-  end
+  if env and env ~= "" then return env end
   local cmds = common.is_windows() and { "hostname" } or { "hostname", "uname -n" }
   for _, cmd in ipairs(cmds) do
     local p = io.popen(cmd .. " 2>" .. (common.is_windows() and "nul" or "/dev/null"))
     if p then
       local line = p:read("*l")
       p:close()
-      if line and line ~= "" then
-        return (line:gsub("[\r\n]+$", ""))
-      end
+      if line and line ~= "" then return (line:gsub("[\r\n]+$", "")) end
     end
   end
   return nil
@@ -58,9 +54,7 @@ local function main(argv)
       if p then
         local f = p:read("*l")
         p:close()
-        if f and f ~= "" then
-          host = (f:gsub("[\r\n]+$", ""))
-        end
+        if f and f ~= "" then host = (f:gsub("[\r\n]+$", "")) end
       end
     end
   end

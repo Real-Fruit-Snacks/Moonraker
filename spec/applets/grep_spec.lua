@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("grep applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("matches a literal pattern", function()
     local rc, out = helpers.invoke_with_stdin("grep", "foo\nbar\nfoobar\n", "foo")

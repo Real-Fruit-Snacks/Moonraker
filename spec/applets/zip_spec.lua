@@ -19,8 +19,12 @@ describe("zip + unzip applets", function()
   end)
 
   after_each(function()
-    for _, p in ipairs(cleanup_files) do pcall(os.remove, p) end
-    for k = #cleanup_dirs, 1, -1 do pcall(lfs.rmdir, cleanup_dirs[k]) end
+    for _, p in ipairs(cleanup_files) do
+      pcall(os.remove, p)
+    end
+    for k = #cleanup_dirs, 1, -1 do
+      pcall(lfs.rmdir, cleanup_dirs[k])
+    end
   end)
 
   local function add_file(name, content)
@@ -110,8 +114,7 @@ describe("zip + unzip applets", function()
     add_file("remove.txt", "drop me")
     local archive = tmp_root .. "/del.zip"
     cleanup_files[#cleanup_files + 1] = archive
-    helpers.invoke_multicall("zip", "-j", archive,
-      tmp_root .. "/keep.txt", tmp_root .. "/remove.txt")
+    helpers.invoke_multicall("zip", "-j", archive, tmp_root .. "/keep.txt", tmp_root .. "/remove.txt")
     local rc = helpers.invoke_multicall("zip", "-d", archive, "remove.txt")
     assert.equal(0, rc)
     local _, out = helpers.invoke_multicall("unzip", "-l", archive)

@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("seq applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("default 1..N", function()
     local rc, out = helpers.invoke_multicall("seq", "5")

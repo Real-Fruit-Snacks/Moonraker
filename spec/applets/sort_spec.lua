@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("sort applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("default ascending sort", function()
     local rc, out = helpers.invoke_with_stdin("sort", "banana\napple\ncherry\n")

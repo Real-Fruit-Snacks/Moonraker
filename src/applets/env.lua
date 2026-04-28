@@ -47,7 +47,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local ignore_env = false
   local unsets = {}
@@ -67,7 +69,8 @@ local function main(argv)
       i = i + 2
     elseif a:sub(1, 1) == "-" and a ~= "-" and #a > 1 and a:sub(1, 2) ~= "--" then
       for ch in a:sub(2):gmatch(".") do
-        if ch == "i" then ignore_env = true
+        if ch == "i" then
+          ignore_env = true
         else
           common.err(NAME, "invalid option: -" .. ch)
           return 2
@@ -92,11 +95,15 @@ local function main(argv)
   end
 
   local remaining = {}
-  for j = i, #args do remaining[#remaining + 1] = args[j] end
+  for j = i, #args do
+    remaining[#remaining + 1] = args[j]
+  end
   if #remaining == 0 then
     -- Print the (possibly modified) environment
     local keys = {}
-    for k in pairs(env) do keys[#keys + 1] = k end
+    for k in pairs(env) do
+      keys[#keys + 1] = k
+    end
     table.sort(keys)
     for _, k in ipairs(keys) do
       io.stdout:write(k, "=", env[k], "\n")
@@ -122,9 +129,7 @@ local function main(argv)
   else
     -- POSIX: env -i K=V ... cmd args (use real env binary if ignore_env, else inline)
     local prefix = {}
-    if ignore_env then
-      prefix[#prefix + 1] = "env -i"
-    end
+    if ignore_env then prefix[#prefix + 1] = "env -i" end
     for k, v in pairs(env) do
       prefix[#prefix + 1] = string.format("%s=%s", k, shell_quote_posix(v))
     end

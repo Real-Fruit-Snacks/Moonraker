@@ -30,12 +30,8 @@ local function shell_exists(cmd)
     probe = "command -v " .. cmd .. " >/dev/null 2>&1"
   end
   local ok, _, code = os.execute(probe)
-  if type(ok) == "number" then
-    return ok == 0
-  end
-  if ok == true and (code == nil or code == 0) then
-    return true
-  end
+  if type(ok) == "number" then return ok == 0 end
+  if ok == true and (code == nil or code == 0) then return true end
   return false
 end
 
@@ -48,48 +44,32 @@ end
 local function http_get(url, dest)
   -- dest is nil to capture the body (returns body, err); otherwise download to file.
   local tool = downloader()
-  if not tool then
-    return nil, "neither curl nor wget is available on PATH"
-  end
+  if not tool then return nil, "neither curl nor wget is available on PATH" end
   local cmd
   if tool == "curl" then
     if dest then
-      cmd = string.format(
-        'curl -fSL --connect-timeout 30 -A "%s" -o "%s" "%s"',
-        USER_AGENT, dest, url)
+      cmd = string.format('curl -fSL --connect-timeout 30 -A "%s" -o "%s" "%s"', USER_AGENT, dest, url)
     else
-      cmd = string.format(
-        'curl -fsSL --connect-timeout 30 -A "%s" "%s"',
-        USER_AGENT, url)
+      cmd = string.format('curl -fsSL --connect-timeout 30 -A "%s" "%s"', USER_AGENT, url)
     end
-  else  -- wget
+  else -- wget
     if dest then
-      cmd = string.format(
-        'wget -q --user-agent="%s" -O "%s" "%s"',
-        USER_AGENT, dest, url)
+      cmd = string.format('wget -q --user-agent="%s" -O "%s" "%s"', USER_AGENT, dest, url)
     else
-      cmd = string.format(
-        'wget -q --user-agent="%s" -O- "%s"',
-        USER_AGENT, url)
+      cmd = string.format('wget -q --user-agent="%s" -O- "%s"', USER_AGENT, url)
     end
   end
   if dest then
     local ok, _, code = os.execute(cmd)
     if type(ok) == "number" then ok = (ok == 0) end
-    if not ok then
-      return nil, tool .. " exit " .. tostring(code or "?")
-    end
+    if not ok then return nil, tool .. " exit " .. tostring(code or "?") end
     return true
   end
   local p = io.popen(cmd, "r")
-  if not p then
-    return nil, "popen failed"
-  end
+  if not p then return nil, "popen failed" end
   local body = p:read("*a") or ""
   local ok = p:close()
-  if not ok then
-    return nil, tool .. " failed (HTTP error or network down)"
-  end
+  if not ok then return nil, tool .. " failed (HTTP error or network down)" end
   return body
 end
 
@@ -116,7 +96,9 @@ local function find_string_at(body, key, from)
   local colon = body:find(":", idx + #key + 2, true)
   if not colon then return nil end
   local p = colon + 1
-  while p <= #body and body:sub(p, p):match("%s") do p = p + 1 end
+  while p <= #body and body:sub(p, p):match("%s") do
+    p = p + 1
+  end
   if body:sub(p, p) ~= '"' then return nil end
   p = p + 1
   local out = {}
@@ -196,7 +178,10 @@ local function default_asset_name(self_path)
   -- Detect macOS vs Linux via uname -s
   local p = io.popen("uname -s 2>/dev/null")
   local sys = ""
-  if p then sys = (p:read("*l") or ""):lower(); p:close() end
+  if p then
+    sys = (p:read("*l") or ""):lower()
+    p:close()
+  end
   if sys:find("darwin") then return string.format("moonraker-macos-%s", arch) end
   return string.format("moonraker-linux-%s", arch)
 end
@@ -207,9 +192,8 @@ local function resolve_path(p)
   local cmd
   if common.is_windows() then
     -- PowerShell -Command "& { (Resolve-Path -LiteralPath '...').Path }"
-    cmd = string.format(
-      'powershell -NoProfile -Command "(Resolve-Path -LiteralPath \'%s\').Path" 2>nul',
-      p:gsub("'", "''"))
+    cmd =
+      string.format("powershell -NoProfile -Command \"(Resolve-Path -LiteralPath '%s').Path\" 2>nul", p:gsub("'", "''"))
   else
     cmd = string.format("readlink -f %q 2>/dev/null", p)
   end
@@ -238,8 +222,11 @@ local function running_binary_path()
   end
   -- Final fallback: which/where moonraker.
   local cmd
-  if common.is_windows() then cmd = "where moonraker 2>nul"
-  else cmd = "command -v moonraker 2>/dev/null" end
+  if common.is_windows() then
+    cmd = "where moonraker 2>nul"
+  else
+    cmd = "command -v moonraker 2>/dev/null"
+  end
   local pipe = io.popen(cmd, "r")
   if pipe then
     local line = pipe:read("*l")
@@ -260,15 +247,13 @@ local function smoke_test(path)
   if not p then return false, "popen failed" end
   local line = p:read("*l") or ""
   p:close()
-  if not line:match("^moonraker%s+") then
-    return false, line ~= "" and line or "no version output"
-  end
+  if not line:match("^moonraker%s+") then return false, line ~= "" and line or "no version output" end
   return true, (line:match("^moonraker%s+(.+)$") or line)
 end
 
 local function replace_binary(current, new_file)
   local backup = current .. ".old"
-  os.remove(backup)  -- best-effort cleanup of stale .old
+  os.remove(backup) -- best-effort cleanup of stale .old
   local ok, err = os.rename(current, backup)
   if not ok then return nil, err or "rename failed" end
   ok, err = os.rename(new_file, current)
@@ -284,13 +269,21 @@ end
 local function tmp_path(suffix)
   local base = os.getenv("TMPDIR") or os.getenv("TEMP") or "/tmp"
   local sep = common.path_sep()
-  return string.format("%s%smoonraker-update-%d-%d.%s",
-    base, sep, os.time(), math.random(100000, 999999), suffix or "tmp")
+  return string.format(
+    "%s%smoonraker-update-%d-%d.%s",
+    base,
+    sep,
+    os.time(),
+    math.random(100000, 999999),
+    suffix or "tmp"
+  )
 end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local check_only, force = false, false
   local asset_override = nil
@@ -298,12 +291,18 @@ local function main(argv)
   local i = 1
   while i <= #args do
     local a = args[i]
-    if a == "--check" then check_only = true; i = i + 1
-    elseif a == "--force" then force = true; i = i + 1
+    if a == "--check" then
+      check_only = true
+      i = i + 1
+    elseif a == "--force" then
+      force = true
+      i = i + 1
     elseif a == "--asset" and args[i + 1] then
-      asset_override = args[i + 1]; i = i + 2
+      asset_override = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 8) == "--asset=" then
-      asset_override = a:sub(9); i = i + 1
+      asset_override = a:sub(9)
+      i = i + 1
     else
       common.err(NAME, "unknown option: " .. a)
       return 2
@@ -318,8 +317,13 @@ local function main(argv)
 
   local asset_name = asset_override or default_asset_name(self_path)
   if not asset_name then
-    common.err(NAME, "could not figure out which release asset matches this "
-      .. "binary (" .. common.basename(self_path) .. "). Try --asset NAME.")
+    common.err(
+      NAME,
+      "could not figure out which release asset matches this "
+        .. "binary ("
+        .. common.basename(self_path)
+        .. "). Try --asset NAME."
+    )
     return 2
   end
 
@@ -354,13 +358,20 @@ local function main(argv)
   local assets = parse_assets(body)
   local match
   for _, a in ipairs(assets) do
-    if a.name == asset_name then match = a; break end
+    if a.name == asset_name then
+      match = a
+      break
+    end
   end
   if not match then
     local names = {}
-    for _, a in ipairs(assets) do names[#names + 1] = a.name end
-    common.err(NAME, string.format("asset %q not in release %s. available: %s",
-      asset_name, tag, table.concat(names, ", ")))
+    for _, a in ipairs(assets) do
+      names[#names + 1] = a.name
+    end
+    common.err(
+      NAME,
+      string.format("asset %q not in release %s. available: %s", asset_name, tag, table.concat(names, ", "))
+    )
     return 1
   end
   if not match.url then

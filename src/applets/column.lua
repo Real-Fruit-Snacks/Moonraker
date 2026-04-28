@@ -96,9 +96,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
 
   local lines = {}
   local rc = 0
@@ -129,7 +127,9 @@ local function main(argv)
       if #r > maxcols then maxcols = #r end
     end
     local widths = {}
-    for k = 1, maxcols do widths[k] = 0 end
+    for k = 1, maxcols do
+      widths[k] = 0
+    end
     for _, row in ipairs(rows) do
       for k, cell in ipairs(row) do
         if #cell > widths[k] then widths[k] = #cell end
@@ -161,9 +161,7 @@ local function main(argv)
         local cells = {}
         for c = 1, cols do
           local idx = (r - 1) * cols + c
-          if idx <= #lines then
-            cells[#cells + 1] = ljust(lines[idx], col_w)
-          end
+          if idx <= #lines then cells[#cells + 1] = ljust(lines[idx], col_w) end
         end
         io.stdout:write(rstrip(table.concat(cells)), "\n")
       end
@@ -172,9 +170,7 @@ local function main(argv)
         local cells = {}
         for c = 1, cols do
           local idx = (c - 1) * rows + r
-          if idx <= #lines then
-            cells[#cells + 1] = ljust(lines[idx], col_w)
-          end
+          if idx <= #lines then cells[#cells + 1] = ljust(lines[idx], col_w) end
         end
         io.stdout:write(rstrip(table.concat(cells)), "\n")
       end

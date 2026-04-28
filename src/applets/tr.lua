@@ -5,26 +5,41 @@ local common = require("common")
 local NAME = "tr"
 
 local ESCAPE = {
-  n = "\n", t = "\t", r = "\r", ["\\"] = "\\",
-  ["0"] = "\0", a = "\a", b = "\b", f = "\f", v = "\v",
+  n = "\n",
+  t = "\t",
+  r = "\r",
+  ["\\"] = "\\",
+  ["0"] = "\0",
+  a = "\a",
+  b = "\b",
+  f = "\f",
+  v = "\v",
 }
 
 local function ascii_letters()
   local s = {}
-  for c = 65, 90 do s[#s + 1] = string.char(c) end
-  for c = 97, 122 do s[#s + 1] = string.char(c) end
+  for c = 65, 90 do
+    s[#s + 1] = string.char(c)
+  end
+  for c = 97, 122 do
+    s[#s + 1] = string.char(c)
+  end
   return table.concat(s)
 end
 
 local function ascii_uppercase()
   local s = {}
-  for c = 65, 90 do s[#s + 1] = string.char(c) end
+  for c = 65, 90 do
+    s[#s + 1] = string.char(c)
+  end
   return table.concat(s)
 end
 
 local function ascii_lowercase()
   local s = {}
-  for c = 97, 122 do s[#s + 1] = string.char(c) end
+  for c = 97, 122 do
+    s[#s + 1] = string.char(c)
+  end
   return table.concat(s)
 end
 
@@ -33,14 +48,14 @@ local function ascii_digits()
 end
 
 local CLASSES = {
-  alpha  = ascii_letters(),
-  upper  = ascii_uppercase(),
-  lower  = ascii_lowercase(),
-  digit  = ascii_digits(),
-  alnum  = ascii_letters() .. ascii_digits(),
-  space  = " \t\n\v\f\r",
-  blank  = " \t",
-  punct  = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+  alpha = ascii_letters(),
+  upper = ascii_uppercase(),
+  lower = ascii_lowercase(),
+  digit = ascii_digits(),
+  alnum = ascii_letters() .. ascii_digits(),
+  space = " \t\n\v\f\r",
+  blank = " \t",
+  punct = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
   xdigit = "0123456789abcdefABCDEF",
 }
 
@@ -79,7 +94,9 @@ local function expand_set(s)
       local a, b = s:byte(i), s:byte(i + 2)
       if a <= b then
         local chars = {}
-        for k = a, b do chars[#chars + 1] = string.char(k) end
+        for k = a, b do
+          chars[#chars + 1] = string.char(k)
+        end
         out[#out + 1] = table.concat(chars)
         i = i + 3
       else
@@ -120,10 +137,14 @@ local function main(argv)
     end
     if a:sub(1, 1) == "-" and #a > 1 and a:sub(2):match("^[dscCt]+$") then
       for ch in a:sub(2):gmatch(".") do
-        if ch == "d" then delete = true
-        elseif ch == "s" then squeeze = true
-        elseif ch == "c" or ch == "C" then complement = true
-        elseif ch == "t" then truncate = true
+        if ch == "d" then
+          delete = true
+        elseif ch == "s" then
+          squeeze = true
+        elseif ch == "c" or ch == "C" then
+          complement = true
+        elseif ch == "t" then
+          truncate = true
         end
       end
       i = i + 1
@@ -157,9 +178,7 @@ local function main(argv)
       local b = data:byte(k)
       local in_set = set[b] == true
       local drop = (not complement and in_set) or (complement and not in_set)
-      if not drop then
-        out[#out + 1] = string.char(b)
-      end
+      if not drop then out[#out + 1] = string.char(b) end
     end
     data = table.concat(out)
   elseif #positional >= 2 then

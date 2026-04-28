@@ -10,9 +10,7 @@ end
 
 local function dirname_str(s)
   local stripped = rstrip_seps(s)
-  if stripped == "" then
-    return s ~= "" and s or "."
-  end
+  if stripped == "" then return s ~= "" and s or "." end
   local last = 0
   for i = #stripped, 1, -1 do
     local ch = stripped:sub(i, i)
@@ -21,12 +19,8 @@ local function dirname_str(s)
       break
     end
   end
-  if last == 0 then
-    return "."
-  end
-  if last == 1 then
-    return stripped:sub(1, 1)
-  end
+  if last == 0 then return "." end
+  if last == 1 then return stripped:sub(1, 1) end
   return stripped:sub(1, last - 1)
 end
 

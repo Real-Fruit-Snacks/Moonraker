@@ -28,13 +28,9 @@ function M.main(argv)
       io.stdout:write(chunk)
       io.stdout:flush()
     end)
-    if not ok then
-      break
-    end
+    if not ok then break end
     iter = iter + 1
-    if limit and iter >= limit then
-      break
-    end
+    if limit and iter >= limit then break end
   end
   return 0
 end

@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("sha1sum applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("computes sha1 of 'abc'", function()
     local rc, out = helpers.invoke_with_stdin("sha1sum", "abc")

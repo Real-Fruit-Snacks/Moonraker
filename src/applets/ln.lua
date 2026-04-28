@@ -10,11 +10,12 @@ local NAME = "ln"
 
 local function exists_or_link(path)
   local lfs = common.try_lfs()
-  if lfs then
-    return lfs.symlinkattributes(path) ~= nil
-  end
+  if lfs then return lfs.symlinkattributes(path) ~= nil end
   local fh = io.open(path, "rb")
-  if fh then fh:close(); return true end
+  if fh then
+    fh:close()
+    return true
+  end
   return false
 end
 
@@ -26,9 +27,7 @@ end
 
 local function make_link(target, link, symbolic)
   local lfs = common.try_lfs()
-  if not lfs or not lfs.link then
-    return false, "luafilesystem does not support link()"
-  end
+  if not lfs or not lfs.link then return false, "luafilesystem does not support link()" end
   return lfs.link(target, link, symbolic)
 end
 
@@ -50,23 +49,25 @@ local function main(argv)
       table.remove(args, i)
       break
     end
-    if a:sub(1, 1) ~= "-" or #a < 2 or a == "-" then
-      break
-    end
+    if a:sub(1, 1) ~= "-" or #a < 2 or a == "-" then break end
     if not a:sub(2):match("^[sfvrT]+$") then
       common.err(NAME, "invalid option: " .. a)
       return 2
     end
     for ch in a:sub(2):gmatch(".") do
-      if ch == "s" then symbolic = true
-      elseif ch == "f" then force = true
-      elseif ch == "v" then verbose = true
+      if ch == "s" then
+        symbolic = true
+      elseif ch == "f" then
+        force = true
+      elseif ch == "v" then
+        verbose = true
       elseif ch == "r" then
         -- `-r` (relative target) is accepted but doesn't currently rewrite
         -- the target — proper computation needs absolute path resolution
         -- that lfs alone doesn't expose. TODO(phase4+).
         symbolic = true
-      elseif ch == "T" then no_target_dir = true
+      elseif ch == "T" then
+        no_target_dir = true
       end
     end
     i = i + 1
@@ -130,9 +131,7 @@ local function main(argv)
 
   local rc = 0
   for _, pair in ipairs(pairs_list) do
-    if not make_one(pair[1], pair[2]) then
-      rc = 1
-    end
+    if not make_one(pair[1], pair[2]) then rc = 1 end
   end
   return rc
 end

@@ -38,9 +38,7 @@ local function main(argv)
         return 2
       end
       for ch in body:gmatch(".") do
-        if ch == "a" then
-          append = true
-        end
+        if ch == "a" then append = true end
         -- 'i' (ignore SIGINT) is accepted for compat; Lua doesn't expose
         -- signal masking from the stdlib.
       end
@@ -63,9 +61,7 @@ local function main(argv)
 
   while true do
     local chunk = io.stdin:read(CHUNK)
-    if not chunk or chunk == "" then
-      break
-    end
+    if not chunk or chunk == "" then break end
     io.stdout:write(chunk)
     io.stdout:flush()
     for _, h in ipairs(handles) do

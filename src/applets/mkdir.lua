@@ -6,23 +6,15 @@ local NAME = "mkdir"
 
 --- Recursively mkdir using lfs. Returns true or (false, errmsg).
 local function mkdir_p(lfs, path)
-  if path == "" or path == "." or path == "/" then
-    return true
-  end
+  if path == "" or path == "." or path == "/" then return true end
   local attr = lfs.attributes(path)
-  if attr and attr.mode == "directory" then
-    return true
-  end
-  if attr then
-    return false, "exists and is not a directory"
-  end
+  if attr and attr.mode == "directory" then return true end
+  if attr then return false, "exists and is not a directory" end
   -- Recurse into parent
   local parent = path:match("^(.*)[/\\][^/\\]+$")
   if parent and parent ~= "" and parent ~= path then
     local ok, err = mkdir_p(lfs, parent)
-    if not ok then
-      return false, err
-    end
+    if not ok then return false, err end
   end
   return lfs.mkdir(path)
 end
@@ -107,13 +99,9 @@ local function main(argv)
       if mode and lfs.touch then
         -- lfs has no chmod; the C function chmod(2) is the right call.
         -- Best-effort via os.execute on POSIX. Windows ignores file mode bits.
-        if not common.is_windows() then
-          os.execute(string.format('chmod %o "%s"', mode, d))
-        end
+        if not common.is_windows() then os.execute(string.format('chmod %o "%s"', mode, d)) end
       end
-      if verbose then
-        io.stdout:write(string.format("mkdir: created directory '%s'\n", d))
-      end
+      if verbose then io.stdout:write(string.format("mkdir: created directory '%s'\n", d)) end
     end
   end
   return rc

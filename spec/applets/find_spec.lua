@@ -19,8 +19,12 @@ describe("find applet", function()
   end)
 
   after_each(function()
-    for _, f in ipairs(cleanup_files) do pcall(os.remove, f) end
-    for i = #cleanup_dirs, 1, -1 do pcall(lfs.rmdir, cleanup_dirs[i]) end
+    for _, f in ipairs(cleanup_files) do
+      pcall(os.remove, f)
+    end
+    for i = #cleanup_dirs, 1, -1 do
+      pcall(lfs.rmdir, cleanup_dirs[i])
+    end
   end)
 
   local function add_file(rel, content)

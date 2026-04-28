@@ -1,7 +1,9 @@
 local helpers = require("helpers")
 
 describe("cut applet", function()
-  before_each(function() helpers.load_applets() end)
+  before_each(function()
+    helpers.load_applets()
+  end)
 
   it("-c selects characters", function()
     local rc, out = helpers.invoke_with_stdin("cut", "hello\nworld\n", "-c", "1-3")

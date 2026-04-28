@@ -75,12 +75,8 @@ local function main(argv)
     return 2
   end
   local f1, f2 = rest[1], rest[2]
-  if rest[3] then
-    skip1 = common.parse_int(rest[3]) or skip1
-  end
-  if rest[4] then
-    skip2 = common.parse_int(rest[4]) or skip2
-  end
+  if rest[3] then skip1 = common.parse_int(rest[3]) or skip1 end
+  if rest[4] then skip2 = common.parse_int(rest[4]) or skip2 end
 
   local h1, e1 = common.open_input(f1, "rb")
   if not h1 then
@@ -102,26 +98,18 @@ local function main(argv)
   local differ = false
 
   while true do
-    if bytes_limit and offset >= bytes_limit then
-      break
-    end
+    if bytes_limit and offset >= bytes_limit then break end
     local b1 = h1:read(1)
     local b2 = h2:read(1)
-    if (b1 == nil or b1 == "") and (b2 == nil or b2 == "") then
-      break
-    end
+    if (b1 == nil or b1 == "") and (b2 == nil or b2 == "") then break end
     if b1 == nil or b1 == "" then
-      if not silent then
-        common.err(NAME, string.format("EOF on %s after byte %d", f1, offset))
-      end
+      if not silent then common.err(NAME, string.format("EOF on %s after byte %d", f1, offset)) end
       if f1 ~= "-" then h1:close() end
       if f2 ~= "-" then h2:close() end
       return 1
     end
     if b2 == nil or b2 == "" then
-      if not silent then
-        common.err(NAME, string.format("EOF on %s after byte %d", f2, offset))
-      end
+      if not silent then common.err(NAME, string.format("EOF on %s after byte %d", f2, offset)) end
       if f1 ~= "-" then h1:close() end
       if f2 ~= "-" then h2:close() end
       return 1
@@ -140,15 +128,21 @@ local function main(argv)
           local function safe(b)
             return (b >= 32 and b < 127) and string.char(b) or "."
           end
-          io.stdout:write(string.format(
-            "%s %s differ: byte %d, line %d is %3o %s %3o %s\n",
-            f1, f2, offset + 1, lineno,
-            b1:byte(), safe(b1:byte()), b2:byte(), safe(b2:byte())
-          ))
+          io.stdout:write(
+            string.format(
+              "%s %s differ: byte %d, line %d is %3o %s %3o %s\n",
+              f1,
+              f2,
+              offset + 1,
+              lineno,
+              b1:byte(),
+              safe(b1:byte()),
+              b2:byte(),
+              safe(b2:byte())
+            )
+          )
         else
-          io.stdout:write(string.format(
-            "%s %s differ: byte %d, line %d\n", f1, f2, offset + 1, lineno
-          ))
+          io.stdout:write(string.format("%s %s differ: byte %d, line %d\n", f1, f2, offset + 1, lineno))
         end
         if f1 ~= "-" then h1:close() end
         if f2 ~= "-" then h2:close() end
@@ -160,9 +154,7 @@ local function main(argv)
   end
   if f1 ~= "-" then h1:close() end
   if f2 ~= "-" then h2:close() end
-  if differ and print_all then
-    return 1
-  end
+  if differ and print_all then return 1 end
   return 0
 end
 

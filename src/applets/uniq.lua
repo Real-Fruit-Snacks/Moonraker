@@ -20,26 +20,16 @@ local function compute_key(line, skip_fields, skip_chars, width, ignore_case)
     end
     s = s:sub(i)
   end
-  if skip_chars > 0 then
-    s = s:sub(skip_chars + 1)
-  end
-  if width then
-    s = s:sub(1, width)
-  end
-  if ignore_case then
-    s = s:lower()
-  end
+  if skip_chars > 0 then s = s:sub(skip_chars + 1) end
+  if width then s = s:sub(1, width) end
+  if ignore_case then s = s:lower() end
   return s
 end
 
 local function take_value(flag, args, idx)
   local a = args[idx]
-  if #a > #flag then
-    return a:sub(#flag + 1), idx + 1
-  end
-  if idx + 1 > #args then
-    return nil, idx
-  end
+  if #a > #flag then return a:sub(#flag + 1), idx + 1 end
+  if idx + 1 > #args then return nil, idx end
   return args[idx + 1], idx + 2
 end
 
@@ -141,9 +131,7 @@ local function main(argv)
     local oh, oerr = io.open(output_path, "wb")
     if not oh then
       common.err_path(NAME, output_path, oerr)
-      if input_path ~= "-" then
-        in_fh:close()
-      end
+      if input_path ~= "-" then in_fh:close() end
       return 1
     end
     out_fh = oh
@@ -174,16 +162,10 @@ local function main(argv)
       prev_line, prev_key, cnt = line, k, 1
     end
   end
-  if prev_line ~= nil then
-    emit(prev_line, cnt)
-  end
+  if prev_line ~= nil then emit(prev_line, cnt) end
 
-  if input_path ~= "-" then
-    in_fh:close()
-  end
-  if close_out then
-    out_fh:close()
-  end
+  if input_path ~= "-" then in_fh:close() end
+  if close_out then out_fh:close() end
   return 0
 end
 

@@ -110,16 +110,10 @@ local function main(argv)
   for j = i, #args do
     rest[#rest + 1] = args[j]
   end
-  if rest[1] then
-    in_file = rest[1]
-  end
-  if rest[2] then
-    prefix = rest[2]
-  end
+  if rest[1] then in_file = rest[1] end
+  if rest[2] then prefix = rest[2] end
 
-  if lines == nil and bytes_per == nil then
-    lines = 1000
-  end
+  if lines == nil and bytes_per == nil then lines = 1000 end
 
   local fh, errmsg
   if in_file == nil or in_file == "-" then
@@ -154,9 +148,7 @@ local function main(argv)
         end
       end
     end
-    if #cur > 0 then
-      chunks[#chunks + 1] = table.concat(cur)
-    end
+    if #cur > 0 then chunks[#chunks + 1] = table.concat(cur) end
   end
 
   local rc = 0

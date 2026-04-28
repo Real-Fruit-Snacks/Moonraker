@@ -66,22 +66,27 @@ local function new_parser(src, opts)
   }, Parser)
 end
 
-function Parser:peek(o) return self.src:sub(self.pos + (o or 0), self.pos + (o or 0)) end
-function Parser:eof() return self.pos > #self.src end
-function Parser:adv(n) self.pos = self.pos + (n or 1) end
+function Parser:peek(o)
+  return self.src:sub(self.pos + (o or 0), self.pos + (o or 0))
+end
+function Parser:eof()
+  return self.pos > #self.src
+end
+function Parser:adv(n)
+  self.pos = self.pos + (n or 1)
+end
 
 function Parser:expect(ch)
-  if self:peek() ~= ch then
-    error("expected '" .. ch .. "' at position " .. self.pos)
-  end
+  if self:peek() ~= ch then error("expected '" .. ch .. "' at position " .. self.pos) end
   self:adv()
 end
 
 -- Parse a backslash-escape; returns an AST node.
 function Parser:parse_escape()
-  self:adv()  -- consume backslash
+  self:adv() -- consume backslash
   if self:eof() then error("trailing backslash") end
-  local c = self:peek(); self:adv()
+  local c = self:peek()
+  self:adv()
   if c == "n" then return { kind = "literal", ch = "\n" } end
   if c == "r" then return { kind = "literal", ch = "\r" } end
   if c == "t" then return { kind = "literal", ch = "\t" } end
@@ -128,14 +133,20 @@ function Parser:parse_charclass()
       self.pos = close + 2
     elseif self:peek() == "\\" then
       local node = self:parse_escape()
-      if node.kind == "literal" then add(P(node.ch))
-      elseif node.kind == "class" then add(node.set)
-      else error("non-class escape inside [...]") end
+      if node.kind == "literal" then
+        add(P(node.ch))
+      elseif node.kind == "class" then
+        add(node.set)
+      else
+        error("non-class escape inside [...]")
+      end
     else
-      local c = self:peek(); self:adv()
+      local c = self:peek()
+      self:adv()
       if self:peek() == "-" and self:peek(1) ~= "]" and not self:eof() then
-        self:adv()  -- consume -
-        local d = self:peek(); self:adv()
+        self:adv() -- consume -
+        local d = self:peek()
+        self:adv()
         add(R(c .. d))
       else
         add(P(c))
@@ -172,7 +183,8 @@ function Parser:parse_atom()
     local non_capturing = false
     if self:peek() == "?" and self:peek(1) == ":" then
       non_capturing = true
-      self:adv(); self:adv()
+      self:adv()
+      self:adv()
     end
     local inner = self:parse_alt()
     self:expect(")")
@@ -180,9 +192,7 @@ function Parser:parse_atom()
     self.n_groups = self.n_groups + 1
     return { kind = "group", inner = inner, index = self.n_groups }
   end
-  if c == "\\" then
-    return self:parse_escape()
-  end
+  if c == "\\" then return self:parse_escape() end
   -- Plain literal byte
   self:adv()
   return { kind = "literal", ch = c }
@@ -200,7 +210,10 @@ function Parser:parse_brace_quant()
   lo = body:match("^(%d+),$")
   if lo then return tonumber(lo), -1 end
   lo = body:match("^(%d+)$")
-  if lo then local n = tonumber(lo); return n, n end
+  if lo then
+    local n = tonumber(lo)
+    return n, n
+  end
   error("bad quantifier: {" .. body .. "}")
 end
 
@@ -279,28 +292,19 @@ do
   local nonword_eos = lpeg.B(P(1) - word_char) * end_of_string
   local sos_nonword = (-lpeg.B(1)) * #(P(1) - word_char)
   local empty_string = (-lpeg.B(1)) * end_of_string
-  at_not_word_boundary = both_word + both_nonword_mid +
-    nonword_eos + sos_nonword + empty_string
+  at_not_word_boundary = both_word + both_nonword_mid + nonword_eos + sos_nonword + empty_string
 end
 
 local function compile_node(node, ignore_case)
   -- Build a literal string pattern, optionally case-insensitive.
   local function lit(ch)
-    if ignore_case and ch:match("%a") then
-      return S(ch:lower() .. ch:upper())
-    end
+    if ignore_case and ch:match("%a") then return S(ch:lower() .. ch:upper()) end
     return P(ch)
   end
 
-  if node.kind == "literal" then
-    return lit(node.ch)
-  end
-  if node.kind == "dot" then
-    return any_no_newline
-  end
-  if node.kind == "class" then
-    return node.set
-  end
+  if node.kind == "literal" then return lit(node.ch) end
+  if node.kind == "dot" then return any_no_newline end
+  if node.kind == "class" then return node.set end
   if node.kind == "anchor" then
     if node.which == "^" then
       -- Match start of string or after newline (multiline mode).
@@ -309,12 +313,8 @@ local function compile_node(node, ignore_case)
     -- $: end of string or before newline
     return -any_byte + #P("\n")
   end
-  if node.kind == "wordboundary" then
-    return at_word_boundary
-  end
-  if node.kind == "notwordboundary" then
-    return at_not_word_boundary
-  end
+  if node.kind == "wordboundary" then return at_word_boundary end
+  if node.kind == "notwordboundary" then return at_not_word_boundary end
   if node.kind == "group" then
     local inner = compile_node(node.inner, ignore_case)
     -- Capture the matched text. Use Cg with name = numeric index so
@@ -347,7 +347,9 @@ local function compile_node(node, ignore_case)
     local pat = inner ^ lo
     if hi > lo then
       local optional = inner ^ -1
-      for _ = 1, hi - lo do pat = pat * optional end
+      for _ = 1, hi - lo do
+        pat = pat * optional
+      end
     end
     return pat
   end
@@ -375,7 +377,9 @@ function Matcher:find(s, init)
   local start = results[1]
   local stop = results[#results] - 1
   local caps = {}
-  for i = 2, #results - 1 do caps[#caps + 1] = results[i] end
+  for i = 2, #results - 1 do
+    caps[#caps + 1] = results[i]
+  end
   return start, stop, caps
 end
 
@@ -383,7 +387,7 @@ function Matcher:match(s, init)
   local _, _, caps = self:find(s, init)
   if not caps then return nil end
   if #caps > 0 then return _unpack(caps) end
-  return nil  -- whole match returned via find; .match returns captures only
+  return nil -- whole match returned via find; .match returns captures only
 end
 
 function Matcher:gsub(s, repl, max_n)
@@ -396,7 +400,8 @@ function Matcher:gsub(s, repl, max_n)
     local start, stop, caps = self:find(s, pos)
     if not start then break end
     -- Append text before the match.
-    result[out_idx] = s:sub(pos, start - 1); out_idx = out_idx + 1
+    result[out_idx] = s:sub(pos, start - 1)
+    out_idx = out_idx + 1
     -- Append replacement.
     if type(repl) == "string" then
       -- Expand replacement: \0 / & = whole match; \1..\9 = captures;
@@ -413,9 +418,13 @@ function Matcher:gsub(s, repl, max_n)
           if nx:match("%d") then
             local idx = tonumber(nx)
             out[#out + 1] = (idx == 0) and matched or (caps[idx] or "")
-          elseif nx == "n" then out[#out + 1] = "\n"
-          elseif nx == "t" then out[#out + 1] = "\t"
-          else out[#out + 1] = nx end
+          elseif nx == "n" then
+            out[#out + 1] = "\n"
+          elseif nx == "t" then
+            out[#out + 1] = "\t"
+          else
+            out[#out + 1] = nx
+          end
           rp = rp + 2
         elseif ch == "&" then
           out[#out + 1] = matched
@@ -425,7 +434,8 @@ function Matcher:gsub(s, repl, max_n)
           rp = rp + 1
         end
       end
-      result[out_idx] = table.concat(out); out_idx = out_idx + 1
+      result[out_idx] = table.concat(out)
+      out_idx = out_idx + 1
     elseif type(repl) == "function" then
       local r
       if #caps > 0 then
@@ -433,7 +443,8 @@ function Matcher:gsub(s, repl, max_n)
       else
         r = repl(s:sub(start, stop))
       end
-      result[out_idx] = tostring(r or s:sub(start, stop)); out_idx = out_idx + 1
+      result[out_idx] = tostring(r or s:sub(start, stop))
+      out_idx = out_idx + 1
     elseif type(repl) == "table" then
       local key = caps[1] or s:sub(start, stop)
       result[out_idx] = tostring(repl[key] or s:sub(start, stop))
@@ -442,7 +453,8 @@ function Matcher:gsub(s, repl, max_n)
     count = count + 1
     if stop < start then
       -- Zero-width match: advance one char to avoid infinite loop.
-      result[out_idx] = s:sub(pos, pos); out_idx = out_idx + 1
+      result[out_idx] = s:sub(pos, pos)
+      out_idx = out_idx + 1
       pos = pos + 1
     else
       pos = stop + 1
@@ -461,15 +473,13 @@ function M.compile(pattern, opts)
   opts = opts or {}
   local p = new_parser(pattern, opts)
   local ast = p:parse_alt()
-  if not p:eof() then
-    error("unexpected character at position " .. p.pos)
-  end
+  if not p:eof() then error("unexpected character at position " .. p.pos) end
   local body = compile_node(ast, opts.ignore_case)
   -- Build a "search anywhere" pattern. Captures emit varargs:
   --   start, body-caps..., end+1
-  local search = P{
+  local search = P({
     Cp() * body * Cp() + (any_byte * V(1)),
-  }
+  })
   return setmetatable({ _search = search, _body = body }, Matcher)
 end
 

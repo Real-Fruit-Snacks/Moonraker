@@ -47,9 +47,7 @@ local function decode(data)
     local c2 = DECODE[data:byte(i + 1)]
     local c3 = DECODE[data:byte(i + 2) or 0]
     local c4 = DECODE[data:byte(i + 3) or 0]
-    if not c1 or not c2 then
-      return nil, "invalid input"
-    end
+    if not c1 or not c2 then return nil, "invalid input" end
     out[#out + 1] = string.char(c1 * 4 + math.floor(c2 / 16))
     if i + 2 <= n then
       if not c3 then return nil, "invalid input" end
@@ -110,9 +108,7 @@ local function main(argv)
   for j = i, #args do
     files[#files + 1] = args[j]
   end
-  if #files == 0 then
-    files = { "-" }
-  end
+  if #files == 0 then files = { "-" } end
   if #files > 1 then
     common.err(NAME, "extra operand")
     return 2
@@ -146,9 +142,7 @@ local function main(argv)
       for j = 1, #encoded, wrap do
         io.stdout:write(encoded:sub(j, j + wrap - 1), "\n")
       end
-      if encoded == "" then
-        io.stdout:write("\n")
-      end
+      if encoded == "" then io.stdout:write("\n") end
     end
   end
   io.stdout:flush()

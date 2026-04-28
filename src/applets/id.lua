@@ -13,15 +13,15 @@ local function probe(cmd)
   if not p then return nil end
   local line = p:read("*l")
   p:close()
-  if line and line ~= "" then
-    return (line:gsub("[\r\n]+$", ""))
-  end
+  if line and line ~= "" then return (line:gsub("[\r\n]+$", "")) end
   return nil
 end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local show_user = false
   local show_group = false
@@ -32,11 +32,20 @@ local function main(argv)
   local i = 1
   while i <= #args do
     local a = args[i]
-    if a == "-u" or a == "--user" then show_user = true; i = i + 1
-    elseif a == "-g" or a == "--group" then show_group = true; i = i + 1
-    elseif a == "-G" or a == "--groups" then show_all_groups = true; i = i + 1
-    elseif a == "-n" or a == "--name" then name_only = true; i = i + 1
-    elseif a == "-r" or a == "--real" then i = i + 1 -- accepted, no-op
+    if a == "-u" or a == "--user" then
+      show_user = true
+      i = i + 1
+    elseif a == "-g" or a == "--group" then
+      show_group = true
+      i = i + 1
+    elseif a == "-G" or a == "--groups" then
+      show_all_groups = true
+      i = i + 1
+    elseif a == "-n" or a == "--name" then
+      name_only = true
+      i = i + 1
+    elseif a == "-r" or a == "--real" then
+      i = i + 1 -- accepted, no-op
     elseif a:sub(1, 1) == "-" and a ~= "-" and #a > 1 then
       common.err(NAME, "unknown option: " .. a)
       return 2
@@ -66,9 +75,7 @@ local function main(argv)
 
   -- POSIX: shell out to `id`.
   local cmd = "id"
-  if user_arg then
-    cmd = cmd .. " " .. user_arg:gsub('"', '\\"')
-  end
+  if user_arg then cmd = cmd .. " " .. user_arg:gsub('"', '\\"') end
   if show_user then
     cmd = cmd .. (name_only and " -un" or " -u")
   elseif show_group then

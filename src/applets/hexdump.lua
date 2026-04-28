@@ -26,9 +26,7 @@ local function canonical(data, base)
     end
     local hex_field = table.concat(first8, " ") .. "  " .. table.concat(second8, " ")
     -- pad to 48 cols for alignment
-    if #hex_field < 48 then
-      hex_field = hex_field .. string.rep(" ", 48 - #hex_field)
-    end
+    if #hex_field < 48 then hex_field = hex_field .. string.rep(" ", 48 - #hex_field) end
     local ascii = {}
     for c = 1, #chunk do
       ascii[#ascii + 1] = printable_char(chunk:byte(c))
@@ -112,8 +110,8 @@ end
 
 local function char_format(data, base)
   local out = {}
-  local special = { [0] = "\\0", [7] = "\\a", [8] = "\\b", [9] = "\\t",
-    [10] = "\\n", [11] = "\\v", [12] = "\\f", [13] = "\\r" }
+  local special =
+    { [0] = "\\0", [7] = "\\a", [8] = "\\b", [9] = "\\t", [10] = "\\n", [11] = "\\v", [12] = "\\f", [13] = "\\r" }
   for k = 1, #data, 16 do
     local chunk = chunk_at(data, k, 16)
     local cells = {}
@@ -135,7 +133,9 @@ end
 
 local function main(argv)
   local args = {}
-  for i = 1, #argv do args[i] = argv[i] end
+  for i = 1, #argv do
+    args[i] = argv[i]
+  end
 
   local fmt = "default"
   local skip = 0
@@ -148,13 +148,26 @@ local function main(argv)
       table.remove(args, i)
       break
     end
-    if a == "-C" or a == "--canonical" then fmt = "canonical"; i = i + 1
-    elseif a == "-b" then fmt = "octal_byte"; i = i + 1
-    elseif a == "-c" then fmt = "char"; i = i + 1
-    elseif a == "-d" then fmt = "decimal"; i = i + 1
-    elseif a == "-x" then fmt = "default"; i = i + 1
-    elseif a == "-o" then fmt = "octal_word"; i = i + 1
-    elseif a == "-v" then i = i + 1
+    if a == "-C" or a == "--canonical" then
+      fmt = "canonical"
+      i = i + 1
+    elseif a == "-b" then
+      fmt = "octal_byte"
+      i = i + 1
+    elseif a == "-c" then
+      fmt = "char"
+      i = i + 1
+    elseif a == "-d" then
+      fmt = "decimal"
+      i = i + 1
+    elseif a == "-x" then
+      fmt = "default"
+      i = i + 1
+    elseif a == "-o" then
+      fmt = "octal_word"
+      i = i + 1
+    elseif a == "-v" then
+      i = i + 1
     elseif (a == "-s" or a == "--skip") and i + 1 <= #args then
       local n = tonumber(args[i + 1])
       if not n then
@@ -180,7 +193,9 @@ local function main(argv)
   end
 
   local files = {}
-  for j = i, #args do files[#files + 1] = args[j] end
+  for j = i, #args do
+    files[#files + 1] = args[j]
+  end
   if #files == 0 then files = { "-" } end
 
   local rc = 0

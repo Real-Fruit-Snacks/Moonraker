@@ -20,9 +20,12 @@ local NAME = "sed"
 -- ---------------------------------------------------------------------
 
 local BRE_SWAP = {
-  ["("] = true, [")"] = true,
-  ["{"] = true, ["}"] = true,
-  ["+"] = true, ["?"] = true,
+  ["("] = true,
+  [")"] = true,
+  ["{"] = true,
+  ["}"] = true,
+  ["+"] = true,
+  ["?"] = true,
   ["|"] = true,
 }
 
@@ -34,13 +37,13 @@ local function bre_to_ere(pattern)
     if c == "\\" and i + 1 <= #pattern then
       local nxt = pattern:sub(i + 1, i + 1)
       if BRE_SWAP[nxt] then
-        out[#out + 1] = nxt          -- BRE \( becomes ERE (
+        out[#out + 1] = nxt -- BRE \( becomes ERE (
       else
         out[#out + 1] = c .. nxt
       end
       i = i + 2
     elseif BRE_SWAP[c] then
-      out[#out + 1] = "\\" .. c       -- BRE bare ( is literal
+      out[#out + 1] = "\\" .. c -- BRE bare ( is literal
       i = i + 1
     else
       out[#out + 1] = c
@@ -55,7 +58,9 @@ end
 -- ---------------------------------------------------------------------
 
 local function skip_ws(s, i)
-  while i <= #s and s:sub(i, i):match("[ \t\n;]") do i = i + 1 end
+  while i <= #s and s:sub(i, i):match("[ \t\n;]") do
+    i = i + 1
+  end
   return i
 end
 
@@ -76,7 +81,9 @@ local function parse_address(s, i)
   local c = s:sub(i, i)
   if c:match("%d") then
     local start = i
-    while i <= #s and s:sub(i, i):match("%d") do i = i + 1 end
+    while i <= #s and s:sub(i, i):match("%d") do
+      i = i + 1
+    end
     return s:sub(start, i - 1), i
   end
   if c == "$" then return "$", i + 1 end
@@ -104,12 +111,16 @@ local function parse_script(script, extended)
       addr2, i = parse_address(script, i)
     end
 
-    while i <= #script and script:sub(i, i):match("[ \t]") do i = i + 1 end
+    while i <= #script and script:sub(i, i):match("[ \t]") do
+      i = i + 1
+    end
     local negate = false
     if i <= #script and script:sub(i, i) == "!" then
       negate = true
       i = i + 1
-      while i <= #script and script:sub(i, i):match("[ \t]") do i = i + 1 end
+      while i <= #script and script:sub(i, i):match("[ \t]") do
+        i = i + 1
+      end
     end
 
     if i > #script then break end
@@ -126,7 +137,9 @@ local function parse_script(script, extended)
       cmd.replacement, i = read_delim_part(script, i, delim)
       if i <= #script then i = i + 1 end
       local fstart = i
-      while i <= #script and not script:sub(i, i):match("[ \t\n;]") do i = i + 1 end
+      while i <= #script and not script:sub(i, i):match("[ \t\n;]") do
+        i = i + 1
+      end
       cmd.flags = script:sub(fstart, i - 1)
       local pat = extended and cmd.pattern or bre_to_ere(cmd.pattern)
       local case_insensitive = cmd.flags:find("[iI]") ~= nil
@@ -155,12 +168,8 @@ end
 -- ---------------------------------------------------------------------
 
 local function match_addr(addr, lineno, line, last_lineno)
-  if addr == "$" then
-    return last_lineno ~= nil and lineno == last_lineno
-  end
-  if addr:match("^%d+$") then
-    return lineno == tonumber(addr)
-  end
+  if addr == "$" then return last_lineno ~= nil and lineno == last_lineno end
+  if addr:match("^%d+$") then return lineno == tonumber(addr) end
   if addr:sub(1, 1) == "/" and addr:sub(-1) == "/" and #addr >= 2 then
     local pat = addr:sub(2, -2)
     local ok, compiled = pcall(regex.compile, pat)
@@ -184,9 +193,7 @@ local function active_for(cmd, lineno, line, last, state)
       state[key] = true
     end
     base = in_range
-    if in_range and match_addr(cmd.addr2, lineno, line, last) then
-      state[key] = false
-    end
+    if in_range and match_addr(cmd.addr2, lineno, line, last) then state[key] = false end
   end
   if cmd.negate then return not base end
   return base
@@ -220,27 +227,20 @@ local function run(cmds, lines, quiet)
       if active_for(cmd, lineno, pattern_space, total, state) then
         if cmd.op == "s" then
           local n_replace = cmd.flags:find("g", 1, true) and math.huge or 1
-          local new_space, nsubs = cmd._compiled:gsub(pattern_space,
-            cmd.replacement, n_replace)
+          local new_space, nsubs = cmd._compiled:gsub(pattern_space, cmd.replacement, n_replace)
           pattern_space = new_space
-          if cmd.flags:find("p", 1, true) and nsubs > 0 then
-            output[#output + 1] = pattern_space .. "\n"
-          end
+          if cmd.flags:find("p", 1, true) and nsubs > 0 then output[#output + 1] = pattern_space .. "\n" end
         elseif cmd.op == "d" then
           deleted = true
         elseif cmd.op == "p" then
           output[#output + 1] = pattern_space .. "\n"
         elseif cmd.op == "q" then
-          if not quiet then
-            output[#output + 1] = pattern_space .. (had_nl and "\n" or "")
-          end
+          if not quiet then output[#output + 1] = pattern_space .. (had_nl and "\n" or "") end
           quitting = true
         elseif cmd.op == "=" then
           output[#output + 1] = tostring(lineno) .. "\n"
         elseif cmd.op == "y" then
-          if #cmd.src ~= #cmd.dst then
-            return nil, "y: source and destination differ in length"
-          end
+          if #cmd.src ~= #cmd.dst then return nil, "y: source and destination differ in length" end
           local table_map = {}
           for k = 1, #cmd.src do
             table_map[cmd.src:sub(k, k)] = cmd.dst:sub(k, k)
@@ -286,7 +286,9 @@ end
 
 local function main(argv)
   local args = {}
-  for k = 1, #argv do args[k] = argv[k] end
+  for k = 1, #argv do
+    args[k] = argv[k]
+  end
 
   local quiet, in_place, extended = false, false, false
   local scripts = {}
@@ -296,23 +298,30 @@ local function main(argv)
   while i <= #args do
     local a = args[i]
     if a == "--" then
-      for j = i + 1, #args do files[#files + 1] = args[j] end
+      for j = i + 1, #args do
+        files[#files + 1] = args[j]
+      end
       break
     end
     if a == "-n" or a == "--quiet" or a == "--silent" then
-      quiet = true; i = i + 1
+      quiet = true
+      i = i + 1
     elseif a == "-E" or a == "-r" or a == "--regexp-extended" then
-      extended = true; i = i + 1
+      extended = true
+      i = i + 1
     elseif a == "-i" or a == "--in-place" then
-      in_place = true; i = i + 1
+      in_place = true
+      i = i + 1
     elseif a == "-e" then
       if not args[i + 1] then
         common.err(NAME, "-e: missing argument")
         return 2
       end
-      scripts[#scripts + 1] = args[i + 1]; i = i + 2
+      scripts[#scripts + 1] = args[i + 1]
+      i = i + 2
     elseif a:sub(1, 2) == "-e" then
-      scripts[#scripts + 1] = a:sub(3); i = i + 1
+      scripts[#scripts + 1] = a:sub(3)
+      i = i + 1
     elseif a == "-f" then
       if not args[i + 1] then
         common.err(NAME, "-f: missing argument")
@@ -335,7 +344,9 @@ local function main(argv)
   end
 
   local positional = {}
-  for j = i, #args do positional[#positional + 1] = args[j] end
+  for j = i, #args do
+    positional[#positional + 1] = args[j]
+  end
   if #scripts == 0 then
     if #positional == 0 then
       common.err(NAME, "missing script")
@@ -344,7 +355,9 @@ local function main(argv)
     scripts[#scripts + 1] = positional[1]
     table.remove(positional, 1)
   end
-  for _, f in ipairs(positional) do files[#files + 1] = f end
+  for _, f in ipairs(positional) do
+    files[#files + 1] = f
+  end
 
   local script = table.concat(scripts, "\n")
   local cmds, perr = parse_script(script, extended)
@@ -383,7 +396,9 @@ local function main(argv)
           common.err_path(NAME, f, oerr or "open failed")
           rc = 1
         else
-          for _, l in ipairs(out_lines) do fh:write(l) end
+          for _, l in ipairs(out_lines) do
+            fh:write(l)
+          end
           fh:close()
           local ok, rrerr = os.rename(tmp, f)
           if not ok then
@@ -393,7 +408,9 @@ local function main(argv)
           end
         end
       else
-        for _, l in ipairs(out_lines) do io.stdout:write(l) end
+        for _, l in ipairs(out_lines) do
+          io.stdout:write(l)
+        end
       end
     end
   end

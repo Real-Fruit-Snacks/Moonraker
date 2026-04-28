@@ -7,7 +7,9 @@ describe("mktemp applet", function()
     cleanup = {}
   end)
   after_each(function()
-    for _, p in ipairs(cleanup) do pcall(os.remove, p) end
+    for _, p in ipairs(cleanup) do
+      pcall(os.remove, p)
+    end
   end)
 
   it("creates a file with default template", function()
