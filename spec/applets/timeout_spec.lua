@@ -16,7 +16,20 @@ describe("timeout applet", function()
   end)
 
   it("command that finishes in time returns its exit code", function()
-    if package.config:sub(1, 1) == "\\" then return end
+    -- The applet shells out to the system `timeout` binary (GNU
+    -- coreutils). Skip on Windows (no timeout) and on macOS without
+    -- coreutils installed.
+    if package.config:sub(1, 1) == "\\" then
+      pending("system `timeout` not available on Windows")
+      return
+    end
+    local probe = io.popen("command -v timeout 2>/dev/null")
+    local found = probe and probe:read("*l") or nil
+    if probe then probe:close() end
+    if not found or found == "" then
+      pending("system `timeout` binary not on PATH (install coreutils)")
+      return
+    end
     local rc = helpers.invoke_multicall("timeout", "5", "true")
     assert.equal(0, rc)
   end)
