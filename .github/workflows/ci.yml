@@ -88,17 +88,19 @@ jobs:
     # baseline (2.35) as the release-workflow build. Building on
     # ubuntu-latest (24.04 / glibc 2.39) would fail to run on older
     # LTS distros.
-    # Windows build via leafo/gh-actions-lua needs MSVC env activation
-    # (vcvarsall) that isn't yet wired up — local Windows builds work
-    # via MSYS2/mingw's gcc, but the runner default doesn't expose `cl`.
-    # Linux + macOS cover the verified build matrix for now.
+    # Windows uses ilammy/msvc-dev-cmd to activate the MSVC env so
+    # leafo/gh-actions-lua can find cl.exe to compile Lua from source.
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-latest]
+        os: [ubuntu-22.04, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Activate MSVC env (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - uses: leafo/gh-actions-lua@v11
         with:
@@ -111,16 +113,34 @@ jobs:
           luarocks install luastatic
           luarocks install luafilesystem
 
-      - name: Build
+      - name: Build (POSIX)
+        if: runner.os != 'Windows'
         run: lua build.lua
 
-      - name: Smoke test
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: lua build.lua
+
+      - name: Smoke test (POSIX)
+        if: runner.os != 'Windows'
         run: |
           ./dist/moonraker --version
           ./dist/moonraker --list
           ./dist/moonraker echo "hello, ${{ matrix.os }}"
           ./dist/moonraker true
           ./dist/moonraker false || test $? -eq 1
+
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./dist/moonraker.exe --version
+          ./dist/moonraker.exe --list
+          ./dist/moonraker.exe echo "hello, windows"
+          ./dist/moonraker.exe true
+          $exit = (./dist/moonraker.exe false; $LASTEXITCODE)
+          if ($exit -ne 1) { throw "false returned $exit, expected 1" }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
