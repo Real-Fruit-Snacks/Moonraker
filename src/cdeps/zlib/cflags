@@ -1,1 +1,6 @@
 -DLZLIB_COMPAT
+# Without HAVE_UNISTD_H, gzlib.c doesn't include <unistd.h> and macOS
+# clang rejects the implicit lseek() declaration in strict C99+ mode.
+# zlib's autoconf would set this; we set it manually since we don't
+# run configure.
+-DHAVE_UNISTD_H
