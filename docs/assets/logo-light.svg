@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 110" fill="none">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8839ef"/>
+      <stop offset="50%" stop-color="#7287fd"/>
+      <stop offset="100%" stop-color="#179299"/>
+    </linearGradient>
+  </defs>
+  <text x="260" y="52" text-anchor="middle"
+        font-family="'Inter', 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="48" font-weight="800" fill="url(#grad)" letter-spacing="6">MOONRAKER</text>
+  <line x1="160" y1="68" x2="360" y2="68" stroke="url(#grad)" stroke-width="0.6" opacity="0.25"/>
+  <text x="260" y="84" text-anchor="middle"
+        font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace"
+        font-size="10" font-weight="400" fill="#6c6f85" letter-spacing="5">UNIX UTILITIES, IN ONE BINARY</text>
+  <text x="260" y="100" text-anchor="middle"
+        font-family="'JetBrains Mono', 'SF Mono', 'Fira Code', monospace"
+        font-size="7.5" font-weight="400" fill="#9ca0b0" letter-spacing="3">LUA  ·  81 APPLETS  ·  LINUX  ·  MACOS  ·  WINDOWS</text>
+</svg>

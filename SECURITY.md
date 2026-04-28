@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Moonraker is in early development. Only the `main` branch is supported.
+Only the `main` branch is supported.
 
 ## Reporting a vulnerability
 
@@ -26,4 +26,4 @@ In scope:
 
 Out of scope:
 - Issues in upstream Lua, OpenSSL, or zlib that have not been re-introduced by Moonraker.
-- Behavioral parity gaps with Mainsail — those are bugs, not vulnerabilities.
+- POSIX-conformance gaps in applet behavior — those are bugs, not vulnerabilities.

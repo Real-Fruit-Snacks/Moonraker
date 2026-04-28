@@ -43,11 +43,18 @@ jobs:
   test:
     name: Test (${{ matrix.os }})
     needs: lint
+    # Unit tests run against the system Lua + luarocks, not the
+    # luastatic-built binary. The applets that need lpeg / zlib / bzip2
+    # therefore require those bindings installed as system rocks.
+    # Linux + macOS provide zlib in the base toolchain; Windows needs
+    # extra setup that's not yet wired up — the binary itself works on
+    # Windows (verified by the build job's smoke tests), but unit tests
+    # are POSIX-only for now.
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -57,22 +64,20 @@ jobs:
 
       - uses: leafo/gh-actions-luarocks@v5
 
+      - name: Install zlib + bzip2 dev headers (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y zlib1g-dev libbz2-dev
+
       - name: Install test deps
         run: |
           luarocks install busted
           luarocks install luafilesystem
+          luarocks install lpeg
+          luarocks install lua-zlib
 
-      - name: Run tests (POSIX)
-        if: runner.os != 'Windows'
+      - name: Run tests
         env:
-          LUA_PATH: "src/?.lua;src/?/init.lua;;"
-        run: busted --run=ci
-
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        env:
-          LUA_PATH: "src/?.lua;src/?/init.lua;;"
+          LUA_PATH: "src/?.lua;src/?/init.lua;src/vendor/?.lua;;"
         run: busted --run=ci
 
   build:

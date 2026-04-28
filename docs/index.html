@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>moonraker — Unix utilities, in one binary</title>
+    <meta name="description" content="81 utilities in one ~1.2 MB binary: POSIX coreutils plus an HTTP client, a DNS resolver, a TCP netcat, hashing, archives (gzip + bzip2 + zip), watch, timeout, base64, uuidgen, shell completions, and self-update. Built with luastatic. Linux/Windows/macOS.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='Inter,sans-serif' font-size='24' font-weight='800' fill='%23cba6f7'%3EM%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            /* Moonraker palette: mauve + lavender + teal — moonlight on water */
+            --accent1:#cba6f7;--accent2:#94e2d5;--accentmid:#b4befe;
+            --accentrgb:203,166,247;
+            --text:#cdd6f4;--sub1:#bac2de;--sub0:#a6adc8;
+            --ov2:#9399b2;--ov1:#7f849c;--ov0:#6c7086;
+            --sf2:#585b70;--sf1:#45475a;--sf0:#313244;
+            --base:#1e1e2e;--mantle:#181825;--crust:#11111b;
+            --green:#a6e3a1;--yellow:#f9e2af;--red:#f38ba8;
+            --peach:#fab387;--mauve:#cba6f7;--teal:#94e2d5;--pink:#f5c2e7;--sky:#89dceb;
+        }
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--crust);color:var(--text);line-height:1.7;overflow-x:hidden}
+        ::selection{background:rgba(var(--accentrgb),0.3);color:var(--text)}
+        .container{max-width:1140px;margin:0 auto;padding:0 28px}
+        code{font-family:'JetBrains Mono',monospace;background:var(--mantle);padding:2px 7px;border-radius:3px;font-size:.88em;color:var(--green)}
+
+        /* ── Nav ── */
+        .nav{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(17,17,27,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(49,50,68,0.5);z-index:1000;display:flex;align-items:center;justify-content:center}
+        .nav-inner{max-width:1140px;width:100%;padding:0 28px;display:flex;align-items:center;justify-content:space-between}
+        .nav-logo{font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:var(--text);text-decoration:none}
+        .nav-links{display:flex;align-items:center;gap:28px}
+        .nav-links a{font-size:13px;font-weight:500;color:var(--ov0);text-decoration:none;transition:color .2s}
+        .nav-links a:hover{color:var(--text)}
+        .nav-cta{background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:box-shadow .2s,transform .2s}
+        .nav-cta:hover{box-shadow:0 0 20px rgba(var(--accentrgb),0.3);transform:translateY(-1px)}
+
+        /* ── Hero ── */
+        .hero{padding:140px 0 80px;text-align:center;position:relative}
+        .hero::before{content:'';position:absolute;top:60px;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(var(--accentrgb),0.08) 0%,transparent 60%);pointer-events:none}
+        .hero-logo{position:relative;max-width:600px;margin:0 auto 32px}
+        .hero-logo img{width:100%;height:auto}
+        .hero-tagline{position:relative;font-size:clamp(24px,3.5vw,38px);font-weight:700;line-height:1.2;margin-bottom:16px;background:linear-gradient(135deg,var(--accent1),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .hero-desc{position:relative;font-size:16px;color:var(--ov0);max-width:580px;margin:0 auto 32px}
+        .hero-ctas{position:relative;display:flex;gap:12px;justify-content:center;margin-bottom:48px}
+        .btn-primary{background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);padding:12px 28px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-decoration:none;transition:box-shadow .2s,transform .2s}
+        .btn-primary:hover{box-shadow:0 0 24px rgba(var(--accentrgb),0.35);transform:translateY(-2px)}
+        .btn-secondary{background:var(--sf0);color:var(--text);padding:12px 28px;border-radius:8px;border:1px solid var(--sf1);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;text-decoration:none;transition:all .2s}
+        .btn-secondary:hover{background:var(--sf1);border-color:var(--sf2)}
+
+        /* ── Terminal ── */
+        .terminal{position:relative;max-width:800px;margin:0 auto;background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.5),0 0 24px rgba(var(--accentrgb),0.06)}
+        .terminal-bar{background:var(--crust);padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--sf0)}
+        .terminal-dot{width:12px;height:12px;border-radius:50%}
+        .terminal-dot:nth-child(1){background:var(--red)}
+        .terminal-dot:nth-child(2){background:var(--yellow)}
+        .terminal-dot:nth-child(3){background:var(--green)}
+        .terminal-label{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ov0)}
+        .terminal-body{padding:24px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.9;text-align:left}
+        .terminal-body pre{margin:0;white-space:pre-wrap;word-wrap:break-word}
+        .t-g{color:var(--green)}.t-b{color:var(--accent1)}.t-m{color:var(--sub0)}.t-p{color:var(--peach)}.t-y{color:var(--yellow)}
+
+        /* ── Stats ── */
+        .stats{display:flex;justify-content:center;gap:40px;padding:60px 0;position:relative}
+        .stat{text-align:center}
+        .stat-num{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:700;color:var(--accent1);line-height:1}
+        .stat-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--sf2);margin-top:6px;letter-spacing:2px;text-transform:uppercase}
+        .stat-div{width:1px;height:48px;background:var(--sf0);align-self:center}
+
+        /* ── Sections ── */
+        section{padding:80px 0}
+        .section-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent1);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+        .section-title{font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:12px;letter-spacing:-.02em}
+        .section-desc{font-size:15px;color:var(--ov0);margin-bottom:48px;max-width:580px}
+        .gradient-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent1),var(--accent2),transparent);margin:0 auto;max-width:600px}
+
+        /* ── Bento ── */
+        .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+        .bento-card{background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;padding:28px;transition:all .25s;position:relative;overflow:hidden}
+        .bento-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent1),var(--accent2));opacity:0;transition:opacity .25s}
+        .bento-card:hover{transform:translateY(-3px);border-color:var(--sf1);box-shadow:0 12px 32px rgba(0,0,0,0.25),0 0 20px rgba(var(--accentrgb),0.06)}
+        .bento-card:hover::before{opacity:1}
+        .bento-hero{grid-column:span 2}
+        .bento-card h3{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--accent1);margin-bottom:8px}
+        .bento-card p{font-size:13.5px;color:var(--sub0);line-height:1.6}
+        .bento-card .mini-terminal{background:var(--crust);border-radius:8px;padding:14px;margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;text-align:left}
+        .bento-stat{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+        .bento-stat .big{font-family:'JetBrains Mono',monospace;font-size:42px;font-weight:700;color:var(--accent1)}
+        .bento-stat .label{font-size:12px;color:var(--sf2);margin-top:4px;letter-spacing:1px}
+
+        /* ── Pills ── */
+        .pill-group{margin-bottom:20px}
+        .pill-group-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ov0);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+        .pills{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+        .pill{background:var(--mantle);border:1px solid;border-radius:20px;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;align-items:center;gap:8px;transition:all .2s}
+        .pill:hover{background:var(--base);filter:brightness(1.25)}
+        .pill .alias{opacity:.55;font-size:11px;margin-left:auto}
+        .pill-group[data-accent="green"]   .pill-group-label,
+        .pill-group[data-accent="green"]   .pill{color:var(--green);border-color:rgba(166,227,161,.35)}
+        .pill-group[data-accent="peach"]   .pill-group-label,
+        .pill-group[data-accent="peach"]   .pill{color:var(--peach);border-color:rgba(250,179,135,.35)}
+        .pill-group[data-accent="cyan"]    .pill-group-label,
+        .pill-group[data-accent="cyan"]    .pill{color:var(--sky);border-color:rgba(137,220,235,.35)}
+        .pill-group[data-accent="mauve"]   .pill-group-label,
+        .pill-group[data-accent="mauve"]   .pill{color:var(--mauve);border-color:rgba(203,166,247,.35)}
+        .pill-group[data-accent="teal"]    .pill-group-label,
+        .pill-group[data-accent="teal"]    .pill{color:var(--teal);border-color:rgba(148,226,213,.35)}
+        .pill-group[data-accent="yellow"]  .pill-group-label,
+        .pill-group[data-accent="yellow"]  .pill{color:var(--yellow);border-color:rgba(249,226,175,.35)}
+        .pill-group[data-accent="red"]     .pill-group-label,
+        .pill-group[data-accent="red"]     .pill{color:var(--red);border-color:rgba(243,139,168,.35)}
+        .pill-group[data-accent="lavender"] .pill-group-label,
+        .pill-group[data-accent="lavender"] .pill{color:var(--accentmid);border-color:rgba(180,190,254,.35)}
+        .pill-group[data-accent="blue"]    .pill-group-label,
+        .pill-group[data-accent="blue"]    .pill{color:var(--sky);border-color:rgba(137,220,235,.35)}
+        .pill-group[data-accent="pink"]    .pill-group-label,
+        .pill-group[data-accent="pink"]    .pill{color:var(--pink);border-color:rgba(245,194,231,.35)}
+
+        /* ── Arch ── */
+        .arch-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+        .arch-card{background:var(--mantle);border:1px solid var(--sf0);border-radius:12px;padding:28px;transition:border-color .2s}
+        .arch-card:hover{border-color:var(--sf1)}
+        .arch-num{display:inline-flex;width:30px;height:30px;background:linear-gradient(135deg,var(--accent1),var(--accentmid));color:var(--crust);border-radius:50%;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:14px}
+        .arch-card h3{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:var(--teal);margin-bottom:8px}
+        .arch-card p{font-size:13.5px;color:var(--sub0);line-height:1.6}
+
+        /* ── Two Col ── */
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+        /* ── Footer ── */
+        footer{padding:48px 0;margin-top:40px}
+        .footer-line{height:1px;background:linear-gradient(90deg,transparent,var(--accent1),var(--accent2),transparent);margin-bottom:48px}
+        .footer-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
+        .footer-grid h4{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);margin-bottom:14px;letter-spacing:2px;text-transform:uppercase}
+        .footer-grid ul{list-style:none}
+        .footer-grid li{margin-bottom:8px}
+        .footer-grid a{color:var(--ov2);text-decoration:none;font-size:13px;transition:color .2s}
+        .footer-grid a:hover{color:var(--accent1)}
+        .footer-grid p{font-size:13px;color:var(--ov1);line-height:1.7}
+        .footer-bottom{text-align:center;margin-top:36px;padding-top:24px;border-top:1px solid var(--sf0);font-size:12px;color:var(--ov0)}
+
+        /* ── Animate ── */
+        .animate{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+        .animate.visible{opacity:1;transform:translateY(0)}
+        .animate-scale{opacity:0;transform:translateY(24px) scale(.97);transition:opacity .8s ease,transform .8s ease}
+        .animate-scale.visible{opacity:1;transform:translateY(0) scale(1)}
+
+        /* ── Responsive ── */
+        @media(max-width:960px){.bento{grid-template-columns:1fr 1fr}.bento-hero{grid-column:span 2}.two-col,.arch-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:repeat(2,1fr)}.stats{flex-wrap:wrap;gap:24px}}
+        @media(max-width:600px){.container{padding:0 16px}.hero{padding:100px 0 48px}.bento{grid-template-columns:1fr}.bento-hero{grid-column:span 1}.stats{gap:16px}.stat-div{display:none}.nav-links a:not(.nav-cta){display:none}.footer-grid{grid-template-columns:1fr}.pills{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}}
+
+        a:focus-visible{outline:2px solid var(--accent1);outline-offset:2px}
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav class="nav"><div class="nav-inner">
+        <a href="#" class="nav-logo">moonraker</a>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#applets">Applets</a>
+            <a href="#architecture">Architecture</a>
+            <a href="https://github.com/Real-Fruit-Snacks/Moonraker">GitHub</a>
+        </div>
+    </div></nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-logo animate"><img src="assets/logo-dark.svg" alt="moonraker"></div>
+            <h1 class="hero-tagline animate" style="transition-delay:.1s">Unix utilities, in one binary, anywhere.</h1>
+            <p class="hero-desc animate" style="transition-delay:.2s">A BusyBox-style multi-call binary in Lua — 81 Unix utilities, one ~1.2&nbsp;MB executable, native on Linux, Windows, and macOS.</p>
+            <div class="hero-ctas animate" style="transition-delay:.3s">
+                <a href="https://github.com/Real-Fruit-Snacks/Moonraker" class="btn-primary">View on GitHub</a>
+                <a href="https://github.com/Real-Fruit-Snacks/Moonraker#quick-start" class="btn-secondary">Quick Start</a>
+            </div>
+            <div class="terminal animate-scale" style="transition-delay:.4s">
+                <div class="terminal-bar">
+                    <span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span>
+                    <span class="terminal-label">moonraker</span>
+                </div>
+                <div class="terminal-body"><pre><span class="t-g">$</span> moonraker seq 100 | moonraker sort -rn | moonraker head -3
+<span class="t-y">100
+99
+98</span>
+
+<span class="t-g">$</span> moonraker awk -F, '{s+=$3} END{print s/NR}' data.csv
+<span class="t-b">42.7</span>
+
+<span class="t-g">$</span> moonraker tar -czf src.tar.gz src/ --exclude='*.bak'
+<span class="t-g">$</span> moonraker sha256sum src.tar.gz
+<span class="t-b">d4f2a8b1c3e7… *src.tar.gz</span>
+
+<span class="t-g">$</span> moonraker http -I -s https://example.com | moonraker head -1
+<span class="t-b">HTTP/2 200</span></pre></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <div class="container">
+        <div class="stats animate">
+            <div class="stat"><div class="stat-num" data-target="81">0</div><div class="stat-label">Applets</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="401">0</div><div class="stat-label">Tests</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="1" data-suffix=".2 MB">0</div><div class="stat-label">Binary</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="4">0</div><div class="stat-label">C Deps</div></div>
+            <div class="stat-div"></div>
+            <div class="stat"><div class="stat-num" data-target="0" data-suffix=" deps">0</div><div class="stat-label">Runtime</div></div>
+        </div>
+        <div class="gradient-line"></div>
+    </div>
+
+    <!-- Features Bento -->
+    <section id="features">
+        <div class="container">
+            <div class="section-label animate">FEATURES</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Everything you reach for, in one place</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">A familiar POSIX surface. Real flag coverage, not stubs. Same behavior on Windows, macOS, and Linux.</p>
+
+            <div class="bento">
+                <div class="bento-card bento-hero animate" style="transition-delay:.1s">
+                    <h3>One Binary, 81 Utilities</h3>
+                    <p>Every common shell tool dispatched through a single executable — POSIX coreutils plus <code>http</code>, <code>dig</code>, <code>nc</code>, hashing, archives, <code>watch</code>, <code>timeout</code>, <code>base64</code>, <code>uuidgen</code>, and the BusyBox parity gap-fillers. Run <code>moonraker install-aliases</code> once and <code>ls</code> just works.</p>
+                    <div class="mini-terminal"><span class="t-g">$</span> moonraker --list | wc -l<br><span class="t-b">81</span><br><span class="t-g">$</span> moonraker install-aliases ~/.local/bin</div>
+                </div>
+                <div class="bento-card bento-stat animate" style="transition-delay:.18s">
+                    <div class="big">1.2<span style="font-size:24px">MB</span></div>
+                    <div class="label">Native Binary</div>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.2s">
+                    <h3 style="color:var(--mauve)">Vendored, Hermetic</h3>
+                    <p>Everything links statically into one binary via <code>luastatic</code>: LPeg, zlib, bzip2, LuaSocket, pure_lua_SHA. No runtime Lua needed, no shared libraries to ship.</p>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.28s">
+                    <h3 style="color:var(--green)">Real Applets</h3>
+                    <p><code>find</code> with <code>-exec</code>, <code>-prune</code>, parens. <code>sed</code> with addresses and in-place edit. <code>awk</code> with BEGIN/END, patterns, arrays, gsub, full control flow, 20 built-ins. <code>tar</code> with <code>-z</code> (gzip) and <code>-j</code> (bzip2).</p>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.36s">
+                    <h3 style="color:var(--peach)">Pipeline-Grade I/O</h3>
+                    <p>Binary-safe through <code>cat</code>/<code>tee</code>/<code>gzip</code>. <code>tail -f</code> follows files. Streaming <code>yes | head -5</code> won't slurp infinite input.</p>
+                </div>
+                <div class="bento-card bento-stat animate" style="transition-delay:.1s">
+                    <div class="big" style="color:var(--teal)">401</div>
+                    <div class="label">Unit Tests</div>
+                </div>
+                <div class="bento-card bento-hero animate" style="transition-delay:.18s">
+                    <h3 style="color:var(--red)">Hash + Archive Compatibility</h3>
+                    <p>Hash digests verified against published RFC test vectors. <code>tar</code> archives round-trip with the system <code>tar</code> on both gzip and bzip2. <code>zip</code>/<code>unzip</code> round-trip with the system <code>unzip</code>.</p>
+                    <div class="mini-terminal"><span class="t-g">$</span> echo -n abc | moonraker sha256sum<br><span class="t-b">ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad  -</span><br><span class="t-m"># matches the SHA-256 reference vector</span></div>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.26s">
+                    <h3 style="color:var(--yellow)">Hackable</h3>
+                    <p>One Lua file per applet — most are 50–250 lines. Add a new one by dropping a module into <code>src/applets/</code> with <code>{name, help, aliases, main}</code> and re-running <code>lua build.lua --regen-only</code>.</p>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.34s">
+                    <h3 style="color:var(--accent1)">POSIX ERE on LPeg</h3>
+                    <p>A small <code>regex.lua</code> compiles POSIX extended regex (anchors, char classes, POSIX named classes, alternation, quantifiers, backrefs in replacement) to LPeg patterns. Used by <code>sed</code> and <code>awk</code>.</p>
+                </div>
+                <div class="bento-card animate" style="transition-delay:.42s">
+                    <h3 style="color:var(--mauve)">Self-Update</h3>
+                    <p><code>moonraker update</code> hits the GitHub Releases API, downloads the matching asset, smoke-tests <code>--version</code>, and atomically swaps. The previous binary stays alongside as <code>.old</code> for one-step revert.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Applets -->
+    <section id="applets" style="background:var(--mantle)">
+        <div class="container">
+            <div class="section-label animate">APPLETS</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">All 81, organized</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">Each applet implements common POSIX flags. Run <code>moonraker &lt;applet&gt; --help</code> for per-applet usage.</p>
+
+            <div class="pill-group animate" data-accent="green">
+                <div class="pill-group-label">File operations</div>
+                <div class="pills">
+                    <div class="pill">ls<span class="alias">dir</span></div>
+                    <div class="pill">cp<span class="alias">copy</span></div>
+                    <div class="pill">mv<span class="alias">move</span></div>
+                    <div class="pill">rm<span class="alias">del</span></div>
+                    <div class="pill">mkdir<span class="alias">md</span></div>
+                    <div class="pill">touch</div>
+                    <div class="pill">find</div>
+                    <div class="pill">chmod</div>
+                    <div class="pill">ln</div>
+                    <div class="pill">stat</div>
+                    <div class="pill">truncate</div>
+                    <div class="pill">mktemp</div>
+                    <div class="pill">dd</div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.06s" data-accent="peach">
+                <div class="pill-group-label">Text processing</div>
+                <div class="pills">
+                    <div class="pill">cat<span class="alias">type</span></div>
+                    <div class="pill">tac</div>
+                    <div class="pill">rev</div>
+                    <div class="pill">grep</div>
+                    <div class="pill">head</div>
+                    <div class="pill">tail</div>
+                    <div class="pill">wc</div>
+                    <div class="pill">nl</div>
+                    <div class="pill">sort</div>
+                    <div class="pill">uniq</div>
+                    <div class="pill">cut</div>
+                    <div class="pill">paste</div>
+                    <div class="pill">tr</div>
+                    <div class="pill">sed</div>
+                    <div class="pill">awk</div>
+                    <div class="pill">tee</div>
+                    <div class="pill">xargs</div>
+                    <div class="pill">printf</div>
+                    <div class="pill">echo</div>
+                    <div class="pill">expand</div>
+                    <div class="pill">unexpand</div>
+                    <div class="pill">split</div>
+                    <div class="pill">cmp</div>
+                    <div class="pill">comm</div>
+                    <div class="pill">fmt</div>
+                    <div class="pill">fold</div>
+                    <div class="pill">column</div>
+                    <div class="pill">od</div>
+                    <div class="pill">hexdump</div>
+                    <div class="pill">base64</div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.12s" data-accent="mauve">
+                <div class="pill-group-label">Network</div>
+                <div class="pills">
+                    <div class="pill">http</div>
+                    <div class="pill">dig</div>
+                    <div class="pill">nc</div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.15s" data-accent="teal">
+                <div class="pill-group-label">Hashing & integrity</div>
+                <div class="pills">
+                    <div class="pill">md5sum</div>
+                    <div class="pill">sha1sum</div>
+                    <div class="pill">sha256sum</div>
+                    <div class="pill">sha512sum</div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.18s" data-accent="yellow">
+                <div class="pill-group-label">Archives</div>
+                <div class="pills">
+                    <div class="pill">tar</div>
+                    <div class="pill">gzip</div>
+                    <div class="pill">gunzip</div>
+                    <div class="pill">zip</div>
+                    <div class="pill">unzip</div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.21s" data-accent="red">
+                <div class="pill-group-label">Filesystem & paths</div>
+                <div class="pills">
+                    <div class="pill">du</div>
+                    <div class="pill">df</div>
+                    <div class="pill">basename</div>
+                    <div class="pill">dirname</div>
+                    <div class="pill">realpath</div>
+                    <div class="pill">pwd</div>
+                    <div class="pill">which<span class="alias">where</span></div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.24s" data-accent="lavender">
+                <div class="pill-group-label">System & control</div>
+                <div class="pills">
+                    <div class="pill">uname</div>
+                    <div class="pill">hostname</div>
+                    <div class="pill">whoami</div>
+                    <div class="pill">id</div>
+                    <div class="pill">groups</div>
+                    <div class="pill">date</div>
+                    <div class="pill">env</div>
+                    <div class="pill">sleep</div>
+                    <div class="pill">seq</div>
+                    <div class="pill">getopt</div>
+                    <div class="pill">uuidgen</div>
+                    <div class="pill">true</div>
+                    <div class="pill">false</div>
+                    <div class="pill">yes</div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.27s" data-accent="pink">
+                <div class="pill-group-label">Process</div>
+                <div class="pills">
+                    <div class="pill">watch</div>
+                    <div class="pill">timeout</div>
+                </div>
+            </div>
+
+            <div class="pill-group animate" style="transition-delay:.30s" data-accent="cyan">
+                <div class="pill-group-label">Lifecycle</div>
+                <div class="pills">
+                    <div class="pill">install-aliases</div>
+                    <div class="pill">completions</div>
+                    <div class="pill">update</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture">
+        <div class="container">
+            <div class="section-label animate">ARCHITECTURE</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Four-layer dispatch</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">Clean separation between the entry point, dispatch logic, applet registry, and per-applet implementations. Adding an applet means dropping one file.</p>
+            <div class="arch-grid">
+                <div class="arch-card animate" style="transition-delay:.1s">
+                    <div class="arch-num">1</div>
+                    <h3>Entry</h3>
+                    <p><code>src/main.lua</code> stashes <code>arg[0]</code> as the running binary path (so <code>update</code> can find itself), then enters <code>cli.main(arg)</code>. The luastatic-built binary uses the same entry — no separate path.</p>
+                </div>
+                <div class="arch-card animate" style="transition-delay:.2s">
+                    <div class="arch-num">2</div>
+                    <h3>Dispatch</h3>
+                    <p><code>src/cli.lua</code> resolves the applet from <code>argv[0]</code> basename (multi-call) or <code>argv[1]</code> (subcommand). Intercepts <code>--help</code> only; <code>-h</code> stays free for applet flags like <code>df -h</code>.</p>
+                </div>
+                <div class="arch-card animate" style="transition-delay:.3s">
+                    <div class="arch-num">3</div>
+                    <h3>Registry</h3>
+                    <p><code>src/applets/init.lua</code> (auto-generated by <code>build.lua</code>) loads each applet module on startup. Each module exposes <code>{name, help, aliases, main(argv) -&gt; integer}</code>.</p>
+                </div>
+                <div class="arch-card animate" style="transition-delay:.4s">
+                    <div class="arch-num">4</div>
+                    <h3>Applets</h3>
+                    <p>81 modules in <code>src/applets/</code>, ranging from ~10 lines (<code>true</code>) to ~1170 (<code>awk</code>). Read stdin via <code>io.stdin</code>; write via <code>io.stdout</code> / <code>io.stderr</code>. Return <code>0</code> / <code>1</code> / <code>2</code> (success / runtime / usage).</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Getting Started -->
+    <section>
+        <div class="container">
+            <div class="section-label animate">GETTING STARTED</div>
+            <h2 class="section-title animate" style="transition-delay:.08s">Install or build</h2>
+            <p class="section-desc animate" style="transition-delay:.16s">Pre-built binaries on the releases page. Build from source for the full experience.</p>
+            <div class="two-col">
+                <div class="terminal animate" style="transition-delay:.1s">
+                    <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">install.sh</span></div>
+                    <div class="terminal-body"><pre><span class="t-m"># From source — Lua 5.4 (or 5.1) + LuaRocks + a C toolchain</span>
+<span class="t-g">$</span> git clone https://github.com/Real-Fruit-Snacks/Moonraker.git
+<span class="t-g">$</span> cd Moonraker
+<span class="t-g">$</span> luarocks install --local luastatic busted luacheck luafilesystem
+<span class="t-g">$</span> make build
+<span class="t-b">→ dist/moonraker (~1.2 MB, 81 applets)</span>
+
+<span class="t-g">$</span> ./dist/moonraker --version
+<span class="t-b">moonraker 0.1.0</span>
+
+<span class="t-m"># Or pick a subset</span>
+<span class="t-g">$</span> lua build.lua --preset minimal
+<span class="t-b">→ dist/moonraker (4 applets: true, false, echo, pwd)</span>
+
+<span class="t-g">$</span> lua build.lua --applets ls,cat,grep,sed,awk
+<span class="t-b">→ dist/moonraker (custom)</span></pre></div>
+                </div>
+                <div class="terminal animate" style="transition-delay:.25s">
+                    <div class="terminal-bar"><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-dot"></span><span class="terminal-label">usage.sh</span></div>
+                    <div class="terminal-body"><pre><span class="t-m"># Daily pipelines (find + awk, all in one binary)</span>
+<span class="t-g">$</span> moonraker find . -name '*.lua' -mtime -7
+<span class="t-g">$</span> moonraker awk -F, '{s+=$3} END{print s/NR}' data.csv
+
+<span class="t-m"># sed with full ERE</span>
+<span class="t-g">$</span> moonraker sed -E 's/(\w+) (\w+)/\2 \1/' &lt; pairs.txt
+
+<span class="t-m"># HTTP + DNS without curl/dig installed</span>
+<span class="t-g">$</span> moonraker http -H 'Authorization: Bearer $T' https://api/me
+<span class="t-g">$</span> moonraker dig MX gmail.com +short
+
+<span class="t-m"># Tab-complete applets, then keep current</span>
+<span class="t-g">$</span> moonraker completions bash | sudo tee /etc/bash_completion.d/moonraker
+<span class="t-g">$</span> moonraker update                  <span class="t-m"># self-update from latest release</span></pre></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-line"></div>
+            <div class="footer-grid">
+                <div>
+                    <h4>Documentation</h4>
+                    <ul>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker#quick-start">Quick Start</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker#features">Features</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker#supported-applets">Applets</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker#architecture">Architecture</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker">Source</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker/issues">Report Issue</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker/blob/main/CHANGELOG.md">Changelog</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker/actions">CI Status</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Project</h4>
+                    <ul>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker/blob/main/LICENSE">License (MIT)</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker/blob/main/NOTICE">Attribution / NOTICE</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker/blob/main/CONTRIBUTING.md">Contributing</a></li>
+                        <li><a href="https://github.com/Real-Fruit-Snacks/Moonraker/blob/main/SECURITY.md">Security</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>License</h4>
+                    <p>MIT License<br>Copyright © 2026</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    // Scroll animations
+    const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('visible');obs.unobserve(el.target)}})},{threshold:.1,rootMargin:'0px 0px -50px 0px'});
+    document.querySelectorAll('.animate,.animate-scale').forEach(el=>obs.observe(el));
+
+    // Counter animation
+    function countUp(el){const t=parseInt(el.dataset.target),s=el.dataset.suffix||'',p=el.dataset.prefix||'',d=1500,st=performance.now();function u(n){const pr=Math.min((n-st)/d,1),e=1-Math.pow(1-pr,3);el.textContent=p+Math.floor(t*e)+s;if(pr<1)requestAnimationFrame(u)}requestAnimationFrame(u)}
+    const sobs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){countUp(el.target);sobs.unobserve(el.target)}})},{threshold:.5});
+    document.querySelectorAll('.stat-num').forEach(el=>sobs.observe(el));
+
+    // Nav scroll
+    window.addEventListener('scroll',()=>{document.querySelector('.nav').style.borderBottomColor=window.scrollY>20?'rgba(49,50,68,0.8)':'rgba(49,50,68,0.3)'});
+    </script>
+</body>
+</html>

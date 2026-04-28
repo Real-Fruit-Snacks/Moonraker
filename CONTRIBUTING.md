@@ -1,6 +1,6 @@
 # Contributing to Moonraker
 
-Thanks for your interest. Moonraker is a Lua 5.4 port of [Mainsail](https://github.com/Real-Fruit-Snacks/Mainsail) — every contribution should keep parity with Mainsail's behavior unless there is a documented reason to diverge.
+Thanks for your interest. Moonraker is a BusyBox-style multi-call binary in Lua. Contributions should keep applet behavior consistent with the documented POSIX semantics and add tests for any new surface area.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ sudo apt install -y lua5.4 liblua5.4-dev luarocks build-essential
 sudo luarocks install busted luacheck luastatic luafilesystem
 ```
 
-If `luarocks-5.4` fails with an SSL error (a [known Ubuntu bug](https://bugs.launchpad.net/ubuntu/+source/lua-sec/+bug/1953448) involving lua-sec for Lua 5.4), fall back to plain `sudo luarocks install ...` which targets the system Lua (5.1 on Ubuntu 22.04 by default). The Moonraker codebase is compatible with both Lua 5.1 and 5.4 — CI runs the canonical Lua 5.4 build on every push.
+If `luarocks-5.4` fails with an SSL error (a [known Ubuntu bug](https://bugs.launchpad.net/ubuntu/+source/lua-sec/+bug/1953448) involving lua-sec for Lua 5.4), fall back to plain `sudo luarocks install ...` which targets the system Lua (5.1 on Ubuntu 22.04 by default). The codebase is compatible with both Lua 5.1 and 5.4 — CI runs the canonical Lua 5.4 build on every push.
 
 ## Workflow
 
@@ -50,8 +50,8 @@ If `luarocks-5.4` fails with an SSL error (a [known Ubuntu bug](https://bugs.lau
    }
    ```
 
-2. Register it in `src/applets/init.lua` (alphabetical order).
-3. Add `spec/applets/<name>_spec.lua` covering the POSIX flags and edge cases. When porting from Mainsail, mirror the cases in `reference/tests/test_applets.py` for that applet.
+2. Run `make regen` (or `lua build.lua --regen-only`) to refresh `src/applets/init.lua`.
+3. Add `spec/applets/<name>_spec.lua` covering the POSIX flags and edge cases for the applet.
 4. Update [`README.md`](README.md) and [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Style
@@ -65,7 +65,7 @@ If `luarocks-5.4` fails with an SSL error (a [known Ubuntu bug](https://bugs.lau
 
 - All applets must have a spec.
 - Tests use the helper in [`spec/helpers.lua`](spec/helpers.lua) to invoke applets through the dispatcher with captured stdio.
-- Aim for behavioral parity with Mainsail: same input, same output, same exit code.
+- Aim for POSIX-conformant behavior: predictable input → output → exit-code triples that match what a user would expect from the system tool of the same name.
 
 ## Reporting bugs
 
