@@ -74,6 +74,7 @@ jobs:
           luarocks install luafilesystem
           luarocks install lpeg
           luarocks install lua-zlib
+          luarocks install luasocket
 
       - name: Run tests
         env:
