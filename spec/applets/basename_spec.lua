@@ -1,0 +1,55 @@
+local helpers = require("helpers")
+
+describe("basename applet", function()
+  before_each(function()
+    helpers.load_applets()
+  end)
+
+  it("strips directory components", function()
+    local rc, out = helpers.invoke_multicall("basename", "/path/to/file.txt")
+    assert.equal(0, rc)
+    assert.equal("file.txt\n", out)
+  end)
+
+  it("handles bare filename", function()
+    local _, out = helpers.invoke_multicall("basename", "file.txt")
+    assert.equal("file.txt\n", out)
+  end)
+
+  it("strips a single suffix (POSIX form)", function()
+    local _, out = helpers.invoke_multicall("basename", "/path/to/file.txt", ".txt")
+    assert.equal("file\n", out)
+  end)
+
+  it("does not strip when name equals suffix", function()
+    local _, out = helpers.invoke_multicall("basename", ".txt", ".txt")
+    assert.equal(".txt\n", out)
+  end)
+
+  it("-a multiple paths", function()
+    local _, out = helpers.invoke_multicall("basename", "-a", "/a/x", "/b/y")
+    assert.equal("x\ny\n", out)
+  end)
+
+  it("-s applies suffix to all paths", function()
+    local _, out = helpers.invoke_multicall("basename", "-s", ".log", "/a/foo.log", "/b/bar.log")
+    assert.equal("foo\nbar\n", out)
+  end)
+
+  it("-z uses NUL terminator", function()
+    local _, out = helpers.invoke_multicall("basename", "-z", "/x/y")
+    assert.equal("y\0", out)
+  end)
+
+  it("missing operand → exit 2", function()
+    local rc, _, err = helpers.invoke_multicall("basename")
+    assert.equal(2, rc)
+    assert.is_truthy(err:match("missing operand"))
+  end)
+
+  it("invalid option → exit 2", function()
+    local rc, _, err = helpers.invoke_multicall("basename", "--bogus", "x")
+    assert.equal(2, rc)
+    assert.is_truthy(err:match("invalid option"))
+  end)
+end)

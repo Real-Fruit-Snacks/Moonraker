@@ -1,0 +1,21 @@
+local helpers = require("helpers")
+
+describe("false applet", function()
+  before_each(function()
+    helpers.load_applets()
+  end)
+
+  it("returns 1 with no output", function()
+    local rc, out, err = helpers.invoke_multicall("false")
+    assert.equal(1, rc)
+    assert.equal("", out)
+    assert.equal("", err)
+  end)
+
+  it("ignores arguments", function()
+    local rc, out, err = helpers.invoke_multicall("false", "anything", "--flags")
+    assert.equal(1, rc)
+    assert.equal("", out)
+    assert.equal("", err)
+  end)
+end)

@@ -1,0 +1,17 @@
+return {
+  default = {
+    verbose = true,
+    output = "utfTerminal",
+    ROOT = { "spec" },
+    pattern = "_spec",
+    lpath = "src/?.lua;src/?/init.lua;src/vendor/?.lua;spec/?.lua;spec/?/init.lua",
+  },
+  ci = {
+    verbose = false,
+    output = "TAP",
+    ROOT = { "spec" },
+    pattern = "_spec",
+    lpath = "src/?.lua;src/?/init.lua;src/vendor/?.lua;spec/?.lua;spec/?/init.lua",
+    ["coverage"] = false,
+  },
+}

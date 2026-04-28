@@ -1,0 +1,46 @@
+local helpers = require("helpers")
+
+describe("completions applet", function()
+  before_each(function() helpers.load_applets() end)
+
+  it("requires a shell argument", function()
+    local rc = helpers.invoke_multicall("completions")
+    assert.equal(2, rc)
+  end)
+
+  it("rejects unknown shells", function()
+    local rc = helpers.invoke_multicall("completions", "tcsh")
+    assert.equal(2, rc)
+  end)
+
+  it("emits a bash script that mentions moonraker", function()
+    local rc, out = helpers.invoke_multicall("completions", "bash")
+    assert.equal(0, rc)
+    assert.is_truthy(out:find("moonraker", 1, true))
+    assert.is_truthy(out:find("complete", 1, true))
+  end)
+
+  it("emits a zsh script", function()
+    local rc, out = helpers.invoke_multicall("completions", "zsh")
+    assert.equal(0, rc)
+    assert.is_truthy(out:find("#compdef moonraker", 1, true))
+  end)
+
+  it("emits a fish script", function()
+    local rc, out = helpers.invoke_multicall("completions", "fish")
+    assert.equal(0, rc)
+    assert.is_truthy(out:find("complete %-c moonraker"))
+  end)
+
+  it("emits a powershell script", function()
+    local rc, out = helpers.invoke_multicall("completions", "powershell")
+    assert.equal(0, rc)
+    assert.is_truthy(out:find("Register%-ArgumentCompleter"))
+  end)
+
+  it("pwsh aliases to powershell", function()
+    local _, ps = helpers.invoke_multicall("completions", "powershell")
+    local _, pw = helpers.invoke_multicall("completions", "pwsh")
+    assert.equal(ps, pw)
+  end)
+end)

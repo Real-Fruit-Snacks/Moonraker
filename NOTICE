@@ -1,0 +1,68 @@
+Moonraker
+Copyright (c) 2026 Real-Fruit-Snacks
+
+This product is a Lua port of Mainsail
+(https://github.com/Real-Fruit-Snacks/Mainsail), an MIT-licensed
+BusyBox-style multi-call utility binary. Behavior, applet inventory, and
+test parity track Mainsail upstream.
+
+Vendored third-party components (under src/vendor/ and src/cdeps/) carry
+their own licenses; see each component's LICENSE file for details.
+
+scripts/luastatic.lua is a vendored copy of luastatic 0.0.12
+(https://github.com/ers35/luastatic). The upstream author placed the
+source in the public domain. We carry a small Windows-portability patch
+(see the file header for details). Re-vendor by copying the upstream
+file and re-applying the patch.
+
+src/cdeps/lpeg/ contains LPeg 1.1.0 by Roberto Ierusalimschy, copyright
+2007-2023 Lua.org & PUC-Rio, distributed under the MIT/X11 license.
+Upstream: https://www.inf.puc-rio.br/~roberto/lpeg.html. See
+src/cdeps/lpeg/LICENSE for the full text. The C sources are compiled
+unmodified and linked into the moonraker binary; `require("lpeg")`
+inside the binary resolves to this embedded module.
+
+src/vendor/re.lua is the re.lua frontend that ships with LPeg 1.1.0,
+unmodified. `require("vendor.re")` (or, for users with system LPeg
+installed, `require("re")`) returns the regex-style PEG compiler.
+
+src/vendor/sha2.lua is Egor Skriptunoff's pure_lua_SHA v12, MIT-licensed,
+copyright (c) Egor Skriptunoff. Upstream:
+https://github.com/Egor-Skriptunoff/pure_lua_SHA. Single-file pure-Lua
+implementation of MD5/SHA-1/SHA-2/SHA-3/HMAC. Backs the *sum applets.
+
+src/cdeps/zlib/ contains zlib 1.3.1 by Jean-loup Gailly and Mark Adler
+(zlib license, 1995-2024). Upstream: https://zlib.net/. Compiled with
+-DLZLIB_COMPAT (via src/cdeps/zlib/cflags) so the lua-zlib glue exposes
+its compatibility constants. See src/cdeps/zlib/LICENSE.zlib.
+
+src/cdeps/zlib/lua_zlib.c is the lua-zlib 1.4-0 binding by Brian Maher
+(MIT license, copyright 2009-2024). Provides the `zlib` Lua module
+backed by zlib above. Backs the gzip / gunzip / tar -z applets.
+
+src/cdeps/luasocket/ contains LuaSocket 3.1.0 by Diego Nehab
+(MIT license, copyright 2004-2022). Upstream:
+https://github.com/lunarmodules/luasocket. We vendor only the POSIX
+TCP/UDP/select C sources (auxiliar, buffer, compat, except, inet, io,
+luasocket, options, select, tcp, timeout, udp, usocket) and the
+top-level socket.lua helper module. The mime, ftp, http, smtp, and
+unix-socket modules are intentionally not vendored — `http` shells out
+to curl/wget for HTTPS, and `nc`/`dig` need only raw sockets. See
+src/cdeps/luasocket/LICENSE.
+
+src/socket.lua is LuaSocket's socket.lua helper from the same upstream,
+placed at the top level so `require("socket")` resolves cleanly under
+luastatic's path-derived module-name scheme.
+
+src/cdeps/bzip2/ contains bzip2 1.0.8 by Julian Seward
+(BSD-style license, copyright 1996-2019). Upstream:
+https://sourceware.org/bzip2/. We vendor only the library sources
+(blocksort, bzlib, compress, crctable, decompress, huffman, randtable
+and the headers). The `bzip2` / `bunzip2` / `bzip2recover` CLI tools
+are intentionally not vendored — moonraker users `tar -j` for the
+common-case (tarball compression). See src/cdeps/bzip2/LICENSE.
+
+src/cdeps/bzip2/lua_bzip2.c is moonraker's own minimal Lua binding
+to libbzip2: a one-shot `bzip2.compress(data, level)` /
+`bzip2.decompress(data)` API used by `tar -j`. Same MIT license as
+the rest of moonraker.

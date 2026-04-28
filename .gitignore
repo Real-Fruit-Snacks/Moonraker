@@ -1,0 +1,41 @@
+# Local-only working files (per PLAN.md)
+PLAN.md
+reference/
+
+# Build output
+/dist/
+/build/
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+moonraker
+moonraker-*
+
+# Lua artifacts
+*.luac
+luacov.*.out
+luacov.report.out
+luacov.stats.out
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test / coverage
+.busted-cache/
+coverage/
+
+# Local configuration overrides
+.envrc
+.env
+*.local

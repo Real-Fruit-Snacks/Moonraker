@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.4"
+
+      - uses: leafo/gh-actions-luarocks@v5
+
+      - name: Install lint tools
+        run: |
+          luarocks install luacheck
+
+      - name: Run luacheck
+        run: luacheck src spec build.lua
+
+      - name: Install stylua
+        uses: JohnnyMorganz/stylua-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest
+          args: --check src spec build.lua
+
+  test:
+    name: Test (${{ matrix.os }})
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.4"
+
+      - uses: leafo/gh-actions-luarocks@v5
+
+      - name: Install test deps
+        run: |
+          luarocks install busted
+          luarocks install luafilesystem
+
+      - name: Run tests (POSIX)
+        if: runner.os != 'Windows'
+        env:
+          LUA_PATH: "src/?.lua;src/?/init.lua;;"
+        run: busted --run=ci
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          LUA_PATH: "src/?.lua;src/?/init.lua;;"
+        run: busted --run=ci
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: leafo/gh-actions-lua@v11
+        with:
+          luaVersion: "5.4"
+
+      - uses: leafo/gh-actions-luarocks@v5
+
+      - name: Install build deps
+        run: |
+          luarocks install luastatic
+
+      - name: Build (POSIX)
+        if: runner.os != 'Windows'
+        run: lua build.lua
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: lua build.lua
+
+      - name: Smoke test (POSIX)
+        if: runner.os != 'Windows'
+        run: |
+          ./dist/moonraker --version
+          ./dist/moonraker --list
+          ./dist/moonraker echo "hello, ${{ matrix.os }}"
+          ./dist/moonraker true
+          ./dist/moonraker false || test $? -eq 1
+
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          ./dist/moonraker.exe --version
+          ./dist/moonraker.exe --list
+          ./dist/moonraker.exe echo "hello, ${{ matrix.os }}"
+          ./dist/moonraker.exe true
+          $exit = (./dist/moonraker.exe false; $LASTEXITCODE)
+          if ($exit -ne 1) { throw "false returned $exit, expected 1" }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moonraker-${{ matrix.os }}
+          path: dist/moonraker*
+          if-no-files-found: error
+          retention-days: 7

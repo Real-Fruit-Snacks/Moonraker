@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Real-Fruit-Snacks/Moonraker/security/advisories/new
+    about: Report a security issue privately via GitHub Security Advisories.
+  - name: Mainsail upstream
+    url: https://github.com/Real-Fruit-Snacks/Mainsail
+    about: Moonraker tracks Mainsail behavior. Behavioral parity gaps belong here as bugs; upstream Mainsail bugs belong on the Mainsail tracker.

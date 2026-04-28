@@ -1,0 +1,31 @@
+local helpers = require("helpers")
+
+describe("sleep applet", function()
+  before_each(function()
+    helpers.load_applets()
+  end)
+
+  it("zero seconds returns immediately", function()
+    local rc, out, err = helpers.invoke_multicall("sleep", "0")
+    assert.equal(0, rc)
+    assert.equal("", out)
+    assert.equal("", err)
+  end)
+
+  it("missing operand → exit 2", function()
+    local rc, _, err = helpers.invoke_multicall("sleep")
+    assert.equal(2, rc)
+    assert.is_truthy(err:match("missing operand"))
+  end)
+
+  it("invalid duration → exit 2", function()
+    local rc, _, err = helpers.invoke_multicall("sleep", "abc")
+    assert.equal(2, rc)
+    assert.is_truthy(err:match("invalid time interval"))
+  end)
+
+  it("negative duration → exit 2", function()
+    local rc = helpers.invoke_multicall("sleep", "-1")
+    assert.equal(2, rc)
+  end)
+end)

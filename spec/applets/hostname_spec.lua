@@ -1,0 +1,25 @@
+local helpers = require("helpers")
+
+describe("hostname applet", function()
+  before_each(function()
+    helpers.load_applets()
+  end)
+
+  it("prints a non-empty hostname", function()
+    local rc, out = helpers.invoke_multicall("hostname")
+    assert.equal(0, rc)
+    assert.is_truthy(out:match("^[^\n]+\n$"))
+  end)
+
+  it("rejects positional arg (setting hostname not supported)", function()
+    local rc, _, err = helpers.invoke_multicall("hostname", "newname")
+    assert.equal(2, rc)
+    assert.is_truthy(err:match("not supported"))
+  end)
+
+  it("invalid option → exit 2", function()
+    local rc, _, err = helpers.invoke_multicall("hostname", "--nope")
+    assert.equal(2, rc)
+    assert.is_truthy(err:match("invalid option"))
+  end)
+end)
