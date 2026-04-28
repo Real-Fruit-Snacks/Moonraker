@@ -17,6 +17,9 @@ permissions:
 jobs:
   build:
     name: Build (${{ matrix.target }})
+    # Windows builds via leafo/gh-actions-lua need MSVC env activation
+    # that's not yet wired up; ship Linux + macOS for now and revisit
+    # Windows when the build path is verified.
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -24,16 +27,10 @@ jobs:
         include:
           - os: ubuntu-latest
             target: linux-x64
-            artifact: moonraker
             rename: moonraker-linux-x64
           - os: macos-latest
             target: macos-arm64
-            artifact: moonraker
             rename: moonraker-macos-arm64
-          - os: windows-latest
-            target: windows-x64
-            artifact: moonraker.exe
-            rename: moonraker-windows-x64.exe
     steps:
       - uses: actions/checkout@v4
 
@@ -46,20 +43,13 @@ jobs:
       - name: Install build deps
         run: |
           luarocks install luastatic
+          luarocks install luafilesystem
 
-      - name: Build (POSIX)
-        if: runner.os != 'Windows'
-        run: lua build.lua
-
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
+      - name: Build
         run: lua build.lua
 
       - name: Rename artifact
-        shell: bash
-        run: |
-          mv "dist/${{ matrix.artifact }}" "dist/${{ matrix.rename }}"
+        run: mv dist/moonraker dist/${{ matrix.rename }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
