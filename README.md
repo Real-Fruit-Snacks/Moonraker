@@ -6,32 +6,48 @@
   <img alt="moonraker" src="docs/assets/logo-dark.svg" width="560">
 </picture>
 
+[![CI](https://github.com/Real-Fruit-Snacks/Moonraker/actions/workflows/ci.yml/badge.svg)](https://github.com/Real-Fruit-Snacks/Moonraker/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Real-Fruit-Snacks/Moonraker?sort=semver&color=brightgreen)](https://github.com/Real-Fruit-Snacks/Moonraker/releases/latest)
 ![Lua](https://img.shields.io/badge/language-Lua-2c2d72.svg)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey)
-![Arch](https://img.shields.io/badge/arch-x86__64%20%7C%20ARM64-blue)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Tests](https://img.shields.io/badge/tests-401%20passing-brightgreen.svg)
 
-A BusyBox-style multi-call binary in Lua — **81 Unix utilities**, one ~1.2 MB executable. Lua 5.1 / 5.4 portable, designed for Linux, Windows, and macOS.
+A BusyBox-style multi-call binary in Lua — **81 Unix utilities**, one ~1.2 MB executable. Lua 5.1 / 5.4 portable; Linux + macOS binaries published with each release.
 
-[Changelog](CHANGELOG.md)
+[Releases](https://github.com/Real-Fruit-Snacks/Moonraker/releases) · [Changelog](CHANGELOG.md)
 
 </div>
 
 ---
 
-## Quick start
+## Install
+
+### From a release
+
+```bash
+# Linux x86_64 (glibc 2.35+: Ubuntu 22.04+, Debian 12+, RHEL 8/9, …)
+curl -LO https://github.com/Real-Fruit-Snacks/Moonraker/releases/latest/download/moonraker-linux-x64
+chmod +x moonraker-linux-x64
+./moonraker-linux-x64 --version
+
+# macOS (Apple Silicon)
+curl -LO https://github.com/Real-Fruit-Snacks/Moonraker/releases/latest/download/moonraker-macos-arm64
+chmod +x moonraker-macos-arm64
+./moonraker-macos-arm64 --list
+```
+
+### From source
 
 Requires Lua 5.4 (or 5.1), [LuaRocks](https://luarocks.org/), and a C toolchain (gcc / clang / MSVC).
 
 ```bash
-luarocks install --local luastatic busted luacheck luafilesystem
+luarocks install --local luastatic busted luacheck luafilesystem lua-zlib lpeg luasocket
 make build
 ./dist/moonraker --list
 ./dist/moonraker echo "hello, world"
 ```
 
-Verified locally on Linux x86_64; the build is structurally cross-platform and CI workflows under `.github/workflows/` target Linux, macOS, and Windows.
+CI verifies the build on Linux (Ubuntu 22.04, glibc 2.35) and macOS. Local Windows builds work via MSYS2/mingw (`gcc`); a Windows binary in releases is a follow-up once the runner-side MSVC environment is wired up.
 
 ### Multi-call dispatch
 
