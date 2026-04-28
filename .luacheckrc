@@ -11,7 +11,7 @@ exclude_files = {
   "src/vendor/",
 }
 
-max_line_length = 100
+max_line_length = 120
 
 -- Test files use busted's globals.
 files["spec/**/*.lua"] = {
